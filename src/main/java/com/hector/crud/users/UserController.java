@@ -13,9 +13,10 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
-import com.hector.crud.users.dtos.CreateUserDto;
-import com.hector.crud.users.dtos.UpdateUserDto;
+
 import com.hector.crud.users.dtos.UserDto;
+import com.hector.crud.users.dtos.requests.CreateUserRequestDto;
+import com.hector.crud.users.dtos.requests.UpdateUserRequestDto;
 
 import jakarta.validation.Valid;
 
@@ -45,14 +46,14 @@ public class UserController {
 
     @PostMapping()
     public ResponseEntity<UserDto> createUser(
-            @Valid @RequestBody() CreateUserDto user) {
+            @Valid @RequestBody() CreateUserRequestDto user) {
         return ResponseEntity.ok(userService.create(user));
     }
 
     @PatchMapping("/{id}")
     public ResponseEntity<UserDto> updateUser(
             @PathVariable UUID id,
-            @RequestBody @Valid UpdateUserDto user) {
+            @RequestBody @Valid UpdateUserRequestDto user) {
         return ResponseEntity.ok(userService.update(id, user));
     }
 

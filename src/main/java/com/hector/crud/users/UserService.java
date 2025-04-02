@@ -11,9 +11,9 @@ import org.springframework.stereotype.Service;
 import org.springframework.web.server.ResponseStatusException;
 
 import com.hector.crud.exception.ResourceNotFoundException;
-import com.hector.crud.users.dtos.CreateUserDto;
-import com.hector.crud.users.dtos.UpdateUserDto;
 import com.hector.crud.users.dtos.UserDto;
+import com.hector.crud.users.dtos.requests.CreateUserRequestDto;
+import com.hector.crud.users.dtos.requests.UpdateUserRequestDto;
 import com.hector.crud.users.models.User;
 
 import jakarta.transaction.Transactional;
@@ -53,7 +53,7 @@ public class UserService {
         return new UserDto(id, userDB.getName(), userDB.getUsername(), userDB.getEmail());
     }
 
-    public UserDto create(CreateUserDto createUserDto) {
+    public UserDto create(CreateUserRequestDto createUserDto) {
 
         // 1. Hash the password
         String hashedPassword = passwordEncoder.encode(createUserDto.password());
@@ -73,7 +73,7 @@ public class UserService {
     }
 
     @Transactional
-    public UserDto update(UUID id, UpdateUserDto updateUserDto) {
+    public UserDto update(UUID id, UpdateUserRequestDto updateUserDto) {
 
         // 1. Verify if exists user by ID.
         User existUser = userRepository.findById(id)
