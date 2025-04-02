@@ -18,7 +18,6 @@ import com.hector.crud.seats.dtos.request.UpdateSeatRequestDto;
 import com.hector.crud.seats.dtos.response.CreateSeatResponseDto;
 
 import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.PutMapping;
 
 @RestController
 @Validated

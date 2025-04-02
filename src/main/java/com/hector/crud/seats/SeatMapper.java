@@ -7,7 +7,6 @@ import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
 import com.hector.crud.seats.dtos.SeatSummaryDto;
-import com.hector.crud.seats.dtos.request.CreateSeatRequestDto;
 import com.hector.crud.seats.dtos.response.CreateSeatResponseDto;
 import com.hector.crud.seats.models.Seat;
 

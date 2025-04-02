@@ -15,10 +15,8 @@ import org.springframework.web.bind.annotation.RestController;
 import com.hector.crud.events.dtos.request.CreateEventRequestDto;
 import com.hector.crud.events.dtos.response.CreateEventResponseDto;
 import com.hector.crud.events.dtos.response.FindOneEventResponseDto;
-import com.hector.crud.events.models.Event;
 
 import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @Validated

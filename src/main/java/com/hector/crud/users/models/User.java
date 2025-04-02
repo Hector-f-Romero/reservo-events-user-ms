@@ -3,8 +3,6 @@ package com.hector.crud.users.models;
 import java.util.List;
 import java.util.UUID;
 
-import org.hibernate.validator.constraints.UniqueElements;
-
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.hector.crud.common.models.BaseEntity;
 import com.hector.crud.events.models.Event;
@@ -16,7 +14,6 @@ import jakarta.persistence.FetchType;
 import jakarta.persistence.GeneratedValue;
 import jakarta.persistence.GenerationType;
 import jakarta.persistence.Id;
-import jakarta.persistence.JoinColumn;
 import jakarta.persistence.OneToMany;
 import jakarta.persistence.Table;
 import lombok.AccessLevel;

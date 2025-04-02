@@ -3,12 +3,9 @@ package com.hector.crud.users;
 import java.util.List;
 import java.util.UUID;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.http.HttpStatus;
+import org.hibernate.Session;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import com.hector.crud.exception.ResourceNotFoundException;
 import com.hector.crud.users.dtos.UserDto;
@@ -16,6 +13,8 @@ import com.hector.crud.users.dtos.requests.CreateUserRequestDto;
 import com.hector.crud.users.dtos.requests.UpdateUserRequestDto;
 import com.hector.crud.users.models.User;
 
+import jakarta.persistence.EntityManager;
+import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
 
 @Service
@@ -23,15 +22,23 @@ public class UserService {
 
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private Logger logger = LoggerFactory.getLogger(UserService.class);;
 
-    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder) {
+    @PersistenceContext
+    private final EntityManager entityManager;
+
+    public UserService(UserRepository userRepository, PasswordEncoder passwordEncoder, EntityManager entityManager) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
+        this.entityManager = entityManager;
     }
 
     // TODO: avoid return documents with isActive = false
     public List<UserDto> find() {
+
+        // 1. Activate the filter to avoid return data with isActive property in false
+        Session session = entityManager.unwrap(Session.class);
+        session.enableFilter("activeFilter").setParameter("isActive", true);
+
         return userRepository.findAll().stream()
                 .map(UserDto::new)
                 .toList();
@@ -39,16 +46,14 @@ public class UserService {
 
     // TODO: avoid return documents with isActive = false
     public UserDto findOne(UUID id) {
-        // 1. Try to find the user in DB.
-        User userDB = userRepository.findById(id).orElse(null);
-        // userRepository.findOne()
 
-        // 2. Validate if not exists
-        if (userDB == null) {
-            // throw new ResponseStatusException(HttpStatus.NOT_FOUND, "User with id " + id
-            // + " not found.");
-            throw new ResourceNotFoundException("User with id " + id + " not found.");
-        }
+        // 1. Activate the filter to avoid return data with isActive property in false
+        Session session = entityManager.unwrap(Session.class);
+        session.enableFilter("activeFilter").setParameter("isActive", true);
+
+        // 2. Try to find the user in DB.
+        User userDB = userRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found."));
 
         return new UserDto(id, userDB.getName(), userDB.getUsername(), userDB.getEmail());
     }

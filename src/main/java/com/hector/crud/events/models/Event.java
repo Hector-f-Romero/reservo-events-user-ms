@@ -1,14 +1,9 @@
 package com.hector.crud.events.models;
 
-import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import org.hibernate.annotations.CreationTimestamp;
-import org.hibernate.annotations.UpdateTimestamp;
-
-import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.hector.crud.common.models.BaseEntity;
 import com.hector.crud.seats.models.Seat;
 import com.hector.crud.users.models.User;

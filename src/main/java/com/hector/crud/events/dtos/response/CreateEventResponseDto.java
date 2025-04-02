@@ -3,12 +3,9 @@ package com.hector.crud.events.dtos.response;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collector;
-import java.util.stream.Collectors;
 
 import com.hector.crud.events.models.Event;
 import com.hector.crud.seats.dtos.SeatSummaryDto;
-import com.hector.crud.seats.dtos.response.CreateSeatResponseDto;
 import com.hector.crud.users.dtos.UserDto;
 
 public record CreateEventResponseDto(

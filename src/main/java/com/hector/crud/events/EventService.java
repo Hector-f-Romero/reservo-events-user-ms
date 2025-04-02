@@ -5,15 +5,14 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
+
 import com.hector.crud.events.dtos.request.CreateEventRequestDto;
 import com.hector.crud.events.dtos.response.CreateEventResponseDto;
 import com.hector.crud.events.dtos.response.FindEventsResponseDto;
 import com.hector.crud.events.dtos.response.FindOneEventResponseDto;
 import com.hector.crud.events.models.Event;
 import com.hector.crud.exception.ResourceNotFoundException;
-import com.hector.crud.seats.SeatMapper;
 import com.hector.crud.seats.SeatRepository;
-import com.hector.crud.seats.SeatService;
 import com.hector.crud.seats.enums.SeatState;
 import com.hector.crud.seats.models.Seat;
 import com.hector.crud.users.UserRepository;

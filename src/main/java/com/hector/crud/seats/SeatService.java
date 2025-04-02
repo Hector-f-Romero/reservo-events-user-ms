@@ -2,7 +2,6 @@ package com.hector.crud.seats;
 
 import java.util.List;
 import java.util.UUID;
-import java.util.stream.Collector;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
@@ -15,7 +14,6 @@ import com.hector.crud.seats.dtos.request.UpdateSeatRequestDto;
 import com.hector.crud.seats.dtos.response.CreateSeatResponseDto;
 import com.hector.crud.seats.enums.SeatState;
 import com.hector.crud.seats.models.Seat;
-import com.hector.crud.users.models.User;
 
 import jakarta.transaction.Transactional;
 

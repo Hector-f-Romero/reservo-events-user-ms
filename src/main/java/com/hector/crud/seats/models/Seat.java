@@ -2,12 +2,9 @@ package com.hector.crud.seats.models;
 
 import java.util.UUID;
 
-import org.hibernate.annotations.ColumnDefault;
-
 import com.hector.crud.common.models.BaseEntity;
 import com.hector.crud.events.models.Event;
 import com.hector.crud.seats.enums.SeatState;
-import com.hector.crud.users.models.User;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;

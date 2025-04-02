@@ -3,6 +3,9 @@ package com.hector.crud.common.models;
 import java.time.Instant;
 
 import org.hibernate.annotations.CreationTimestamp;
+import org.hibernate.annotations.Filter;
+import org.hibernate.annotations.FilterDef;
+import org.hibernate.annotations.ParamDef;
 import org.hibernate.annotations.UpdateTimestamp;
 
 import com.fasterxml.jackson.annotation.JsonIgnore;
@@ -15,6 +18,8 @@ import lombok.Setter;
 @MappedSuperclass
 @Getter
 @Setter
+@FilterDef(name = "activeFilter", parameters = @ParamDef(name = "isActive", type = Boolean.class))
+@Filter(name = "activeFilter", condition = "isActive = :isActive")
 public abstract class BaseEntity {
 
     @CreationTimestamp
