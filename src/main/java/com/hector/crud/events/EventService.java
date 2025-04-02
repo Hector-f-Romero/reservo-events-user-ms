@@ -5,41 +5,49 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
-import com.hector.crud.CrudApplication;
-
-import com.hector.crud.events.dtos.CreateEventDto;
-import com.hector.crud.events.dtos.EventDto;
-import com.hector.crud.events.dtos.FindOneEventDto;
+import com.hector.crud.events.dtos.request.CreateEventRequestDto;
+import com.hector.crud.events.dtos.response.CreateEventResponseDto;
+import com.hector.crud.events.dtos.response.FindEventsResponseDto;
+import com.hector.crud.events.dtos.response.FindOneEventResponseDto;
 import com.hector.crud.events.models.Event;
 import com.hector.crud.exception.ResourceNotFoundException;
+import com.hector.crud.seats.SeatMapper;
+import com.hector.crud.seats.SeatRepository;
+import com.hector.crud.seats.SeatService;
+import com.hector.crud.seats.enums.SeatState;
+import com.hector.crud.seats.models.Seat;
 import com.hector.crud.users.UserRepository;
-import com.hector.crud.users.dtos.UserDto;
 import com.hector.crud.users.models.User;
+
+import jakarta.transaction.Transactional;
 
 @Service
 public class EventService {
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
+    private final SeatRepository seatRepository;
 
     public EventService(EventRepository eventRepository, UserRepository userRepository,
-            CrudApplication crudApplication) {
+            SeatRepository seatRepository) {
         this.eventRepository = eventRepository;
         this.userRepository = userRepository;
+        this.seatRepository = seatRepository;
     }
 
-    public List<EventDto> find() {
-        return eventRepository.findAll()
-                .stream()
-                .map(EventDto::new)
-                .collect(Collectors.toList());
+    public List<FindEventsResponseDto> find() {
+        return eventRepository.findAll().stream()
+                .map(event -> {
+                    // Convert each event to a DTO, excluding seat details.
+                    return EventMapper.INSTANCE.toFindEventResponseDto(event);
+                }).collect(Collectors.toList());
     }
 
-    public FindOneEventDto findOne(UUID id) {
+    public FindOneEventResponseDto findOne(UUID id) {
         // 1. Try to find and event in DB
         Event eventDB = eventRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Event not found."));
 
-        // return EventMapper.INSTANCE.ToEventDto(eventDB);
+        // return EventMapper.INSTANCE.toCreateEventResponseDto(eventDB);
         return EventMapper.INSTANCE.toFindOneEventDto(eventDB);
 
         // return new EventDto(id, eventDB.getName(), eventDB.getDescription(),
@@ -50,7 +58,8 @@ public class EventService {
         // eventDB.getOrganizedBy().getEmail()));
     }
 
-    public EventDto create(CreateEventDto createEventDto) {
+    @Transactional
+    public CreateEventResponseDto create(CreateEventRequestDto createEventDto) {
 
         // 1. First find the organized user by ID
         User organizer = userRepository.findById(createEventDto.organizedBy())
@@ -59,14 +68,26 @@ public class EventService {
 
         // 2. Map the dto to JPA class
         Event mappedEvent = EventMapper.INSTANCE.toEntity(createEventDto);
-
+        // 3. Put the User object in organizedBy property.
         mappedEvent.setOrganizedBy(organizer);
-        // 3. Save the document in DB.
+
+        // 4. Save the event document in DB.
         Event eventDB = eventRepository.save(mappedEvent);
 
-        // 4. Convert db object into DTo
-        EventDto responseEvent = EventMapper.INSTANCE.ToEventDto(eventDB);
+        // 5. Create the seats related to event.
+        List<Seat> seatsList = createEventDto.seats()
+                .stream()
+                .map(seatTag -> Seat.builder().tag(seatTag).state(SeatState.AVAILABLE).event(eventDB).build())
+                .collect(Collectors.toList());
 
+        // 6. Save the seats data in DB.
+        List<Seat> seatsDB = seatRepository.saveAll(seatsList);
+
+        // 7. Adds seat information to the previously created event object.
+        eventDB.setSeats(seatsDB);
+
+        // 8. Convert db object into DTo
+        CreateEventResponseDto responseEvent = EventMapper.INSTANCE.toCreateEventResponseDto(eventDB);
         return responseEvent;
     }
 }

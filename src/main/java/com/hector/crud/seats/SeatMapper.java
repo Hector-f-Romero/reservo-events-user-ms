@@ -1,11 +1,14 @@
 package com.hector.crud.seats;
 
+import java.util.List;
+
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
 
-import com.hector.crud.seats.dtos.CreateSeatDto;
-import com.hector.crud.seats.dtos.SeatDto;
+import com.hector.crud.seats.dtos.SeatSummaryDto;
+import com.hector.crud.seats.dtos.request.CreateSeatRequestDto;
+import com.hector.crud.seats.dtos.response.CreateSeatResponseDto;
 import com.hector.crud.seats.models.Seat;
 
 @Mapper(componentModel = "spring")
@@ -18,5 +21,10 @@ public interface SeatMapper {
     // Seat toEntity(CreateSeatDto createSeatDto);
 
     @Mapping(source = "event.id", target = "eventId")
-    SeatDto toSeatDto(Seat seat);
+    CreateSeatResponseDto toSeatDto(Seat seat);
+
+    @Mapping(source = "event.id", target = "eventId")
+    List<CreateSeatResponseDto> toSeatDtoList(List<Seat> seats);
+
+    List<SeatSummaryDto> toListSeatSummaryDto(List<CreateSeatResponseDto> createSeatResponseDto);
 }

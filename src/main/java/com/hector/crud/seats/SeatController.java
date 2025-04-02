@@ -1,5 +1,6 @@
 package com.hector.crud.seats;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.validation.annotation.Validated;
@@ -11,9 +12,10 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.hector.crud.seats.dtos.CreateSeatDto;
-import com.hector.crud.seats.dtos.SeatDto;
-import com.hector.crud.seats.dtos.UpdateSeatDto;
+import com.hector.crud.seats.dtos.request.CreateManySeatsRequestDto;
+import com.hector.crud.seats.dtos.request.CreateSeatRequestDto;
+import com.hector.crud.seats.dtos.request.UpdateSeatRequestDto;
+import com.hector.crud.seats.dtos.response.CreateSeatResponseDto;
 
 import jakarta.validation.Valid;
 import org.springframework.web.bind.annotation.PutMapping;
@@ -30,17 +32,23 @@ public class SeatController {
     }
 
     @GetMapping("/{id}")
-    public SeatDto getSeatById(@Valid @PathVariable UUID id) {
+    public CreateSeatResponseDto getSeatById(@Valid @PathVariable UUID id) {
         return this.seatService.findOne(id);
     }
 
     @PostMapping()
-    public SeatDto createSeat(@Valid @RequestBody() CreateSeatDto createSeatDto) {
+    public CreateSeatResponseDto createSeat(@Valid @RequestBody() CreateSeatRequestDto createSeatDto) {
         return this.seatService.create(createSeatDto);
     }
 
+    @PostMapping("/all")
+    public List<CreateSeatResponseDto> creatManySeats(@RequestBody CreateManySeatsRequestDto createManySeatsDto) {
+        return this.seatService.createMany(createManySeatsDto.seats(), createManySeatsDto.eventId());
+    }
+
     @PatchMapping("/{id}")
-    public SeatDto updateSeat(@Valid @PathVariable UUID id, @Valid @RequestBody UpdateSeatDto updateSeatDto) {
+    public CreateSeatResponseDto updateSeat(@Valid @PathVariable UUID id,
+            @Valid @RequestBody UpdateSeatRequestDto updateSeatDto) {
         return this.seatService.update(id, updateSeatDto);
     }
 

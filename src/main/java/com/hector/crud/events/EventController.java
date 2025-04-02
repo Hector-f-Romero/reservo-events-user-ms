@@ -12,9 +12,9 @@ import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
-import com.hector.crud.events.dtos.CreateEventDto;
-import com.hector.crud.events.dtos.EventDto;
-import com.hector.crud.events.dtos.FindOneEventDto;
+import com.hector.crud.events.dtos.request.CreateEventRequestDto;
+import com.hector.crud.events.dtos.response.CreateEventResponseDto;
+import com.hector.crud.events.dtos.response.FindOneEventResponseDto;
 import com.hector.crud.events.models.Event;
 
 import jakarta.validation.Valid;
@@ -35,13 +35,13 @@ public class EventController {
     }
 
     @GetMapping("/{id}")
-    public FindOneEventDto getEventDto(@Valid @PathVariable UUID id) {
+    public FindOneEventResponseDto getEventDto(@Valid @PathVariable UUID id) {
         return this.eventService.findOne(id);
     }
 
     @PostMapping()
-    public ResponseEntity<EventDto> createEvent(
-            @Valid @RequestBody() CreateEventDto event) {
+    public ResponseEntity<CreateEventResponseDto> createEvent(
+            @Valid @RequestBody() CreateEventRequestDto event) {
         return ResponseEntity.ok(eventService.create(event));
     }
 }

@@ -1,18 +1,23 @@
 package com.hector.crud.seats;
 
+import java.util.List;
 import java.util.UUID;
+import java.util.stream.Collector;
+import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
 import com.hector.crud.events.EventRepository;
 import com.hector.crud.events.models.Event;
 import com.hector.crud.exception.ResourceNotFoundException;
-import com.hector.crud.seats.dtos.CreateSeatDto;
-import com.hector.crud.seats.dtos.SeatDto;
-import com.hector.crud.seats.dtos.UpdateSeatDto;
+import com.hector.crud.seats.dtos.request.CreateSeatRequestDto;
+import com.hector.crud.seats.dtos.request.UpdateSeatRequestDto;
+import com.hector.crud.seats.dtos.response.CreateSeatResponseDto;
 import com.hector.crud.seats.enums.SeatState;
 import com.hector.crud.seats.models.Seat;
 import com.hector.crud.users.models.User;
+
+import jakarta.transaction.Transactional;
 
 @Service
 public class SeatService {
@@ -25,7 +30,7 @@ public class SeatService {
         this.eventRepository = eventRepository;
     }
 
-    public SeatDto findOne(UUID id) {
+    public CreateSeatResponseDto findOne(UUID id) {
 
         // 1. Try to find the user in DB.
         Seat seatDB = seatRepository.findById(id)
@@ -34,7 +39,7 @@ public class SeatService {
         return SeatMapper.INSTANCE.toSeatDto(seatDB);
     }
 
-    public SeatDto create(CreateSeatDto createSeatDto) {
+    public CreateSeatResponseDto create(CreateSeatRequestDto createSeatDto) {
 
         // 1. Search in DB the eventId
         Event eventDB = eventRepository.findById(createSeatDto.eventId()).orElseThrow(
@@ -50,7 +55,27 @@ public class SeatService {
         return SeatMapper.INSTANCE.toSeatDto(newSeat);
     }
 
-    public SeatDto update(UUID id, UpdateSeatDto updateSeatDto) {
+    @Transactional
+    public List<CreateSeatResponseDto> createMany(List<String> seats, UUID eventId) {
+
+        // 1. Verify that exists an event with the id sent.
+        Event event = eventRepository.findById(eventId)
+                .orElseThrow(() -> new ResourceNotFoundException("Event with " + eventId + " not found"));
+
+        // 2. Create the SeatDB object with the list sent
+        List<Seat> seatsList = seats.stream()
+                .map(tag -> Seat.builder()
+                        .tag(tag).state(SeatState.AVAILABLE)
+                        .event(event)
+                        .build())
+                .collect(Collectors.toList());
+
+        seatRepository.saveAll(seatsList);
+
+        return SeatMapper.INSTANCE.toSeatDtoList(seatsList);
+    }
+
+    public CreateSeatResponseDto update(UUID id, UpdateSeatRequestDto updateSeatDto) {
 
         Seat seatDB = this.seatRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Seat with id " + id + " not found"));
