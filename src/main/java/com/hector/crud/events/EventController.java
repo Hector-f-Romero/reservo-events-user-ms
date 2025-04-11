@@ -1,5 +1,6 @@
 package com.hector.crud.events;
 
+import java.util.List;
 import java.util.UUID;
 
 import org.springframework.beans.factory.annotation.Autowired;
@@ -14,9 +15,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.hector.crud.events.dtos.request.CreateEventRequestDto;
 import com.hector.crud.events.dtos.response.CreateEventResponseDto;
+import com.hector.crud.events.dtos.response.FindUpcomingEventResponseDto;
 import com.hector.crud.events.dtos.response.FindOneEventResponseDto;
 
 import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @Validated
@@ -30,6 +33,11 @@ public class EventController {
     public ResponseEntity<?> getEvents() {
         return ResponseEntity.ok(eventService.find());
         // return ResponseEntity.ok("ok");
+    }
+
+    @GetMapping("/upcoming")
+    public List<FindUpcomingEventResponseDto> getMethodName() {
+        return eventService.findUpcoming();
     }
 
     @GetMapping("/{id}")

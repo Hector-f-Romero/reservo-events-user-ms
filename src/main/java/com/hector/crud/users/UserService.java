@@ -5,11 +5,13 @@ import java.util.UUID;
 
 import org.hibernate.Session;
 import org.springframework.security.crypto.password.PasswordEncoder;
+import org.springframework.security.web.firewall.RequestRejectedException;
 import org.springframework.stereotype.Service;
 
 import com.hector.crud.exception.ResourceNotFoundException;
 import com.hector.crud.users.dtos.UserDto;
 import com.hector.crud.users.dtos.requests.CreateUserRequestDto;
+import com.hector.crud.users.dtos.requests.LoginUserRequestDto;
 import com.hector.crud.users.dtos.requests.UpdateUserRequestDto;
 import com.hector.crud.users.models.User;
 
@@ -122,6 +124,21 @@ public class UserService {
 
         // 3. Save the changes in DB.
         userRepository.save(existUser);
+
+    }
+
+    public UserDto login(LoginUserRequestDto loginUserRequestDto) {
+        User userDB = userRepository.findByUsername(loginUserRequestDto.username())
+                .orElseThrow(() -> new ResourceNotFoundException("Username not registered yet"));
+
+        boolean matchPassword = passwordEncoder.matches(loginUserRequestDto.password(), userDB.getPassword());
+
+        if (!matchPassword) {
+            throw new RequestRejectedException("Contraseña invalida");
+        }
+
+        // 3. Return the mapped data.
+        return UserMapper.INSTANCE.toUserDto(userDB);
 
     }
 }

@@ -1,5 +1,7 @@
 package com.hector.crud.events;
 
+import java.util.List;
+
 import org.mapstruct.Mapper;
 import org.mapstruct.Mapping;
 import org.mapstruct.factory.Mappers;
@@ -8,6 +10,7 @@ import com.hector.crud.events.dtos.request.CreateEventRequestDto;
 import com.hector.crud.events.dtos.response.CreateEventResponseDto;
 import com.hector.crud.events.dtos.response.FindEventsResponseDto;
 import com.hector.crud.events.dtos.response.FindOneEventResponseDto;
+import com.hector.crud.events.dtos.response.FindUpcomingEventResponseDto;
 import com.hector.crud.events.models.Event;;
 
 @Mapper(componentModel = "spring")

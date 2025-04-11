@@ -16,9 +16,11 @@ import org.springframework.web.bind.annotation.RestController;
 
 import com.hector.crud.users.dtos.UserDto;
 import com.hector.crud.users.dtos.requests.CreateUserRequestDto;
+import com.hector.crud.users.dtos.requests.LoginUserRequestDto;
 import com.hector.crud.users.dtos.requests.UpdateUserRequestDto;
 
 import jakarta.validation.Valid;
+import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @Validated
@@ -48,6 +50,11 @@ public class UserController {
     public ResponseEntity<UserDto> createUser(
             @Valid @RequestBody() CreateUserRequestDto user) {
         return ResponseEntity.ok(userService.create(user));
+    }
+
+    @PostMapping("/login")
+    public ResponseEntity<UserDto> loginUser(@RequestBody LoginUserRequestDto loginUserRequestDto) {
+        return ResponseEntity.ok(userService.login(loginUserRequestDto));
     }
 
     @PatchMapping("/{id}")

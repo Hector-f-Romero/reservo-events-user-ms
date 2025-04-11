@@ -1,5 +1,8 @@
 package com.hector.crud.events;
 
+import java.time.Instant;
+import java.time.ZoneId;
+import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
@@ -8,6 +11,7 @@ import org.springframework.stereotype.Service;
 
 import com.hector.crud.events.dtos.request.CreateEventRequestDto;
 import com.hector.crud.events.dtos.response.CreateEventResponseDto;
+import com.hector.crud.events.dtos.response.FindUpcomingEventResponseDto;
 import com.hector.crud.events.dtos.response.FindEventsResponseDto;
 import com.hector.crud.events.dtos.response.FindOneEventResponseDto;
 import com.hector.crud.events.models.Event;
@@ -41,6 +45,26 @@ public class EventService {
                 }).collect(Collectors.toList());
     }
 
+    public List<FindUpcomingEventResponseDto> findUpcoming() {
+        var results = eventRepository.findUpcomingEventsWithAvailableSeats(ZonedDateTime.now());
+
+        List<FindUpcomingEventResponseDto> upcomingEventList = results.stream()
+                .map(result -> {
+                    UUID id = (UUID) result[0];
+                    String name = (String) result[1];
+                    String description = (String) result[2];
+                    ZonedDateTime date = ((Instant) result[3]).atZone(ZoneId.systemDefault());
+                    short capacity = ((Number) result[4]).shortValue();
+                    short occupiedSeats = ((Number) result[5]).shortValue();
+                    String organizedBy = (String) result[6];
+
+                    return new FindUpcomingEventResponseDto(id, name, description, date, capacity, occupiedSeats,
+                            organizedBy);
+                }).collect(Collectors.toList());
+
+        return upcomingEventList;
+    }
+
     public FindOneEventResponseDto findOne(UUID id) {
         // 1. Try to find and event in DB
         Event eventDB = eventRepository.findById(id)
@@ -48,13 +72,6 @@ public class EventService {
 
         // return EventMapper.INSTANCE.toCreateEventResponseDto(eventDB);
         return EventMapper.INSTANCE.toFindOneEventDto(eventDB);
-
-        // return new EventDto(id, eventDB.getName(), eventDB.getDescription(),
-        // eventDB.getDate(), eventDB.getCapacity(),
-        // new UserDto(eventDB.getOrganizedBy().getId(),
-        // eventDB.getOrganizedBy().getName(),
-        // eventDB.getOrganizedBy().getUsername(),
-        // eventDB.getOrganizedBy().getEmail()));
     }
 
     @Transactional
