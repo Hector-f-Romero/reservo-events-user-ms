@@ -10,9 +10,9 @@
 		<relativePath /> <!-- lookup parent from repository -->
 	</parent>
 	<groupId>com.hector</groupId>
-	<artifactId>crud</artifactId>
+	<artifactId>event-user-ms</artifactId>
 	<version>0.0.1-SNAPSHOT</version>
-	<name>crud</name>
+	<name>event-user-ms</name>
 	<description>Demo project for Spring Boot</description>
 	<url />
 	<licenses>
@@ -132,7 +132,7 @@
 				<artifactId>spring-boot-maven-plugin</artifactId>
 			</plugin>
 		</plugins>
-		<finalName>confero-ms-crud</finalName>
+		<finalName>event-user-ms</finalName>
 	</build>
 
 </project>
