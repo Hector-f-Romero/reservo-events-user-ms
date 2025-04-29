@@ -19,11 +19,13 @@ import com.hector.crud.users.dtos.requests.CreateUserRequestDto;
 import com.hector.crud.users.dtos.requests.LoginUserRequestDto;
 import com.hector.crud.users.dtos.requests.UpdateUserRequestDto;
 
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @Validated
+@Tag(name = "Users", description = "Operations related to user management (registration, login, update, and deletion).")
 @RequestMapping("/users")
 public class UserController {
 
@@ -36,27 +38,32 @@ public class UserController {
         this.userService = userService;
     }
 
+    @Operation(summary = "Get active users", description = "Returns a list of all active registered users in the system.")
     @GetMapping()
     public ResponseEntity<List<UserDto>> getUsers() {
         return ResponseEntity.ok(userService.find());
     }
 
+    @Operation(summary = "Get user by ID", description = "Returns information for a specific active user, identified by their UUID")
     @GetMapping("/{id}")
     public ResponseEntity<UserDto> getUserById(@Valid @PathVariable UUID id) {
         return ResponseEntity.ok(userService.findOne(id));
     }
 
+    @Operation(summary = "Create a user", description = "Receives user data and registers the user in the system.")
     @PostMapping()
     public ResponseEntity<UserDto> createUser(
             @Valid @RequestBody() CreateUserRequestDto user) {
         return ResponseEntity.ok(userService.create(user));
     }
 
+    @Operation(summary = "Login user", description = "Verifies user credentials and returns user information if correct.")
     @PostMapping("/login")
     public ResponseEntity<UserDto> loginUser(@RequestBody LoginUserRequestDto loginUserRequestDto) {
         return ResponseEntity.ok(userService.login(loginUserRequestDto));
     }
 
+    @Operation(summary = "Update user information", description = "Allows partial modification of user data using their UUID.")
     @PatchMapping("/{id}")
     public ResponseEntity<UserDto> updateUser(
             @PathVariable UUID id,
@@ -64,6 +71,7 @@ public class UserController {
         return ResponseEntity.ok(userService.update(id, user));
     }
 
+    @Operation(summary = "Delete a user", description = "Deletes a user from the system using their UUID. This operation apply a soft delete in database, so its attribute 'isActive' will change to 'false'.")
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable @Valid UUID id) {
         userService.delete(id);

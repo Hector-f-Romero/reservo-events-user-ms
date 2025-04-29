@@ -16,35 +16,43 @@ import org.springframework.web.bind.annotation.RestController;
 import com.hector.crud.events.dtos.request.CreateEventRequestDto;
 import com.hector.crud.events.dtos.response.CreateEventResponseDto;
 import com.hector.crud.events.dtos.response.FindUpcomingEventResponseDto;
+
+import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.tags.Tag;
+
 import com.hector.crud.events.dtos.response.FindOneEventResponseDto;
 
 import jakarta.validation.Valid;
-import org.springframework.web.bind.annotation.RequestParam;
 
 @RestController
 @Validated
+@Tag(name = "Events", description = "Operations for managing events: querying, creation, and listing upcoming events.")
 @RequestMapping("/events")
 public class EventController {
 
     @Autowired
     private EventService eventService;
 
+    @Operation(summary = "Get all events", description = "Returns a list of all registered events in the system, excluding seat details.")
     @GetMapping()
     public ResponseEntity<?> getEvents() {
         return ResponseEntity.ok(eventService.find());
         // return ResponseEntity.ok("ok");
     }
 
+    @Operation(summary = "Get upcoming event list", description = "Returns a list of upcoming events, showing only those with available seats and a future date.")
     @GetMapping("/upcoming")
-    public List<FindUpcomingEventResponseDto> getMethodName() {
+    public List<FindUpcomingEventResponseDto> getUpcomingEvents() {
         return eventService.findUpcoming();
     }
 
+    @Operation(summary = "Get an event by ID", description = "Returns complete information for a specific event using its UUID.")
     @GetMapping("/{id}")
     public FindOneEventResponseDto getEventDto(@Valid @PathVariable UUID id) {
         return this.eventService.findOne(id);
     }
 
+    @Operation(summary = "Create an event", description = "Allows registering a new event, associating it with an existing organizer, and automatically generating the related seats.")
     @PostMapping()
     public ResponseEntity<CreateEventResponseDto> createEvent(
             @Valid @RequestBody() CreateEventRequestDto event) {
