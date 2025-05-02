@@ -18,6 +18,7 @@ public class EventUserMsApplication {
 				dotenv.get("DATABASE_USERNAME"));
 		System.setProperty("spring.datasource.password",
 				dotenv.get("DATABASE_PASSWORD"));
+		System.setProperty("nats.server", dotenv.get("NATS_SERVER"));
 
 		SpringApplication.run(EventUserMsApplication.class, args);
 

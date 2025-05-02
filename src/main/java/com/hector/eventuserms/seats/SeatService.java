@@ -5,10 +5,10 @@ import java.util.UUID;
 import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
-
 import com.hector.eventuserms.events.EventRepository;
 import com.hector.eventuserms.events.models.Event;
 import com.hector.eventuserms.exception.ResourceNotFoundException;
+import com.hector.eventuserms.seats.dtos.SeatSummaryDto;
 import com.hector.eventuserms.seats.dtos.request.CreateSeatRequestDto;
 import com.hector.eventuserms.seats.dtos.request.UpdateSeatRequestDto;
 import com.hector.eventuserms.seats.dtos.response.CreateSeatResponseDto;
@@ -22,10 +22,13 @@ public class SeatService {
 
     private final SeatRepository seatRepository;
     private final EventRepository eventRepository;
+    private final SeatNatsService seatNatsService;
 
-    public SeatService(SeatRepository seatRepository, EventRepository eventRepository) {
+    public SeatService(SeatRepository seatRepository, EventRepository eventRepository,
+            SeatNatsService seatNatsService) {
         this.seatRepository = seatRepository;
         this.eventRepository = eventRepository;
+        this.seatNatsService = seatNatsService;
     }
 
     public CreateSeatResponseDto findOne(UUID id) {
@@ -73,6 +76,7 @@ public class SeatService {
         return SeatMapper.INSTANCE.toSeatDtoList(seatsList);
     }
 
+    @Transactional
     public CreateSeatResponseDto update(UUID id, UpdateSeatRequestDto updateSeatDto) {
 
         Seat seatDB = this.seatRepository.findById(id)
@@ -88,8 +92,20 @@ public class SeatService {
         }
 
         // 3. Save the changes in DB.
-        Seat updatedUser = seatRepository.save(seatDB);
+        Seat updatedSeat = seatRepository.save(seatDB);
 
-        return SeatMapper.INSTANCE.toSeatDto(updatedUser);
+        // 4. If the state is changed, send a notification through NATS to websocket
+        // microservice.
+        if (updateSeatDto.state() != null) {
+            try {
+                // 4.1 Use a service class specialized in NATS communication.
+                this.seatNatsService.sendUpdateSeatStatusEvent(updatedSeat.getEvent().getId(),
+                        new SeatSummaryDto(updatedSeat));
+            } catch (Exception e) {
+                // TODO: handle exception
+                throw new InternalError(e.getMessage());
+            }
+        }
+        return SeatMapper.INSTANCE.toSeatDto(updatedSeat);
     }
 }
