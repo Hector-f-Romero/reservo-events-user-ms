@@ -4,13 +4,17 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.hibernate.TypeMismatchException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
+import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+
 import com.hector.eventuserms.exception.ApiError;
 import com.hector.eventuserms.exception.ResourceNotFoundException;
 
@@ -60,6 +64,71 @@ public class GlobalExceptionHandler {
 
         return new ResponseEntity<>(apiError, HttpStatus.CONFLICT);
 
+    }
+
+    // Handles MethodArgumentTypeMismatchException which occurs when a request
+    // parameter cannot be converted to the required type (e.g., when a UUID is
+    // invalid).
+    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+    public ResponseEntity<ApiError> handleTypeMismatchException(MethodArgumentTypeMismatchException ex,
+            HttpServletRequest request) {
+        String errorMessage = String.format("Parameter '%s' must be %s.",
+                ex.getName(),
+                ex.getRequiredType().getSimpleName());
+
+        ApiError apiError = new ApiError(
+                request.getRequestURI(),
+                errorMessage,
+                HttpStatus.BAD_REQUEST.value(),
+                LocalDateTime.now());
+
+        return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
+    }
+
+    // Handles HttpMessageNotReadableException which occurs when the request body
+    // cannot be deserialized to the expected Java type.
+    @ExceptionHandler(HttpMessageNotReadableException.class)
+    public ResponseEntity<ApiError> handleHttpMessageNotReadable(HttpMessageNotReadableException ex,
+            HttpServletRequest request) {
+        String errorMessage = "Error procesing input JSON: " + ex.getMessage();
+
+        ApiError apiError = new ApiError(
+                request.getRequestURI(),
+                errorMessage,
+                HttpStatus.BAD_REQUEST.value(),
+                LocalDateTime.now());
+
+        return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
+    }
+
+    // Handles TypeMismatchException which is the base class for data type
+    // conversion errors in Spring.
+    @ExceptionHandler(TypeMismatchException.class)
+    public ResponseEntity<ApiError> handleTypeMismatchException(TypeNotPresentException ex,
+            HttpServletRequest request) {
+        String errorMessage = "Type error: " + ex.getMessage();
+
+        ApiError apiError = new ApiError(
+                request.getRequestURI(),
+                errorMessage,
+                HttpStatus.BAD_REQUEST.value(),
+                LocalDateTime.now());
+
+        return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
+
+    }
+
+    // Handles any exception not caught by other specific handlers. This is the last
+    // resort for unexpected errors.
+    @ExceptionHandler(Exception.class)
+    public ResponseEntity<ApiError> handleGenericException(Exception ex, HttpServletRequest request) {
+        ApiError apiError = new ApiError(
+                request.getRequestURI(),
+                "Server error: " + ex.getMessage(),
+                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                LocalDateTime.now());
+
+        return new ResponseEntity<>(apiError, HttpStatus.INTERNAL_SERVER_ERROR);
     }
 
 }
