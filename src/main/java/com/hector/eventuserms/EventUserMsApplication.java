@@ -10,15 +10,12 @@ public class EventUserMsApplication {
 
 	public static void main(String[] args) {
 
-		// Load enviroment variables
+		// 1. Load enviroment variables
 		Dotenv dotenv = Dotenv.configure().load();
 
-		System.setProperty("spring.datasource.url", dotenv.get("DATABASE_URL"));
-		System.setProperty("spring.datasource.username",
-				dotenv.get("DATABASE_USERNAME"));
-		System.setProperty("spring.datasource.password",
-				dotenv.get("DATABASE_PASSWORD"));
-		System.setProperty("nats.server", dotenv.get("NATS_SERVER"));
+		// 2. Convert .env variables to env system vars. For this,
+		// application.properties can use it .env file.
+		dotenv.entries().forEach(entry -> System.setProperty(entry.getKey(), entry.getValue()));
 
 		SpringApplication.run(EventUserMsApplication.class, args);
 

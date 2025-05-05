@@ -1,0 +1,15 @@
+services:
+  db:
+    container_name: reservo-db
+    image: postgres:16.6
+    restart: always
+    env_file:
+      - .env
+    ports:
+      - 5433:5432
+    environment:
+      POSTGRES_USER: ${DB_USERNAME}
+      POSTGRES_PASSWORD: ${DB_PASSWORD}
+      POSTGRES_DB: ${DB_NAME}
+    volumes:
+      - ./postgres:/var/lib/postgresql/data
