@@ -3,9 +3,12 @@ package com.hector.eventuserms.users.models;
 import java.util.List;
 import java.util.UUID;
 
+import org.apache.commons.lang3.builder.ToStringExclude;
+
 import com.fasterxml.jackson.annotation.JsonIgnore;
 import com.hector.eventuserms.common.models.BaseEntity;
 import com.hector.eventuserms.events.models.Event;
+import com.hector.eventuserms.seats.models.Seat;
 
 import jakarta.persistence.CascadeType;
 import jakarta.persistence.Column;
@@ -55,4 +58,8 @@ public class User extends BaseEntity {
     @OneToMany(mappedBy = "organizedBy", fetch = FetchType.LAZY, cascade = CascadeType.ALL)
     @ToString.Exclude
     private List<Event> organizedEvents;
+
+    @OneToMany(mappedBy = "userId", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
+    @ToStringExclude
+    private List<Seat> reservedSeats;
 }

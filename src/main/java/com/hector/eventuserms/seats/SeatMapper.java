@@ -8,6 +8,7 @@ import org.mapstruct.factory.Mappers;
 
 import com.hector.eventuserms.seats.dtos.SeatSummaryDto;
 import com.hector.eventuserms.seats.dtos.response.CreateSeatResponseDto;
+import com.hector.eventuserms.seats.dtos.response.UpdateSeatResponseDto;
 import com.hector.eventuserms.seats.models.Seat;
 
 @Mapper(componentModel = "spring")
@@ -26,4 +27,8 @@ public interface SeatMapper {
     List<CreateSeatResponseDto> toSeatDtoList(List<Seat> seats);
 
     List<SeatSummaryDto> toListSeatSummaryDto(List<CreateSeatResponseDto> createSeatResponseDto);
+
+    @Mapping(source = "userId.id", target = "userId")
+    @Mapping(source = "event.id", target = "eventId")
+    UpdateSeatResponseDto toUpdateSeatResponseDto(Seat seat);
 }

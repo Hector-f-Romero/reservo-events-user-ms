@@ -16,6 +16,7 @@ import com.hector.eventuserms.seats.dtos.request.CreateManySeatsRequestDto;
 import com.hector.eventuserms.seats.dtos.request.CreateSeatRequestDto;
 import com.hector.eventuserms.seats.dtos.request.UpdateSeatRequestDto;
 import com.hector.eventuserms.seats.dtos.response.CreateSeatResponseDto;
+import com.hector.eventuserms.seats.dtos.response.UpdateSeatResponseDto;
 
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.tags.Tag;
@@ -53,7 +54,7 @@ public class SeatController {
 
     @Operation(summary = "Update seat information", description = "Modifies the data of an existing seat using its UUID.")
     @PatchMapping("/{id}")
-    public CreateSeatResponseDto updateSeat(@Valid @PathVariable UUID id,
+    public UpdateSeatResponseDto updateSeat(@Valid @PathVariable UUID id,
             @Valid @RequestBody UpdateSeatRequestDto updateSeatDto) {
         return this.seatService.update(id, updateSeatDto);
     }

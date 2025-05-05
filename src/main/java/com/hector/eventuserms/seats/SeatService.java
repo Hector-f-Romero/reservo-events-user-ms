@@ -4,7 +4,11 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.stereotype.Service;
+import org.springframework.web.server.ResponseStatusException;
+
 import com.hector.eventuserms.events.EventRepository;
 import com.hector.eventuserms.events.models.Event;
 import com.hector.eventuserms.exception.ResourceNotFoundException;
@@ -12,8 +16,11 @@ import com.hector.eventuserms.seats.dtos.SeatSummaryDto;
 import com.hector.eventuserms.seats.dtos.request.CreateSeatRequestDto;
 import com.hector.eventuserms.seats.dtos.request.UpdateSeatRequestDto;
 import com.hector.eventuserms.seats.dtos.response.CreateSeatResponseDto;
+import com.hector.eventuserms.seats.dtos.response.UpdateSeatResponseDto;
 import com.hector.eventuserms.seats.enums.SeatState;
 import com.hector.eventuserms.seats.models.Seat;
+import com.hector.eventuserms.users.UserRepository;
+import com.hector.eventuserms.users.models.User;
 
 import jakarta.transaction.Transactional;
 
@@ -22,12 +29,14 @@ public class SeatService {
 
     private final SeatRepository seatRepository;
     private final EventRepository eventRepository;
+    private final UserRepository userRepository;
     private final SeatNatsService seatNatsService;
 
     public SeatService(SeatRepository seatRepository, EventRepository eventRepository,
-            SeatNatsService seatNatsService) {
+            SeatNatsService seatNatsService, UserRepository userRepository) {
         this.seatRepository = seatRepository;
         this.eventRepository = eventRepository;
+        this.userRepository = userRepository;
         this.seatNatsService = seatNatsService;
     }
 
@@ -36,6 +45,10 @@ public class SeatService {
         // 1. Try to find the user in DB.
         Seat seatDB = seatRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Seat with id " + id + " not found."));
+
+        System.out.println("----------------------------------");
+        System.out.println(seatDB.toString());
+        // System.out.println(seatDB.getUserId());
 
         return SeatMapper.INSTANCE.toSeatDto(seatDB);
     }
@@ -77,8 +90,9 @@ public class SeatService {
     }
 
     @Transactional
-    public CreateSeatResponseDto update(UUID id, UpdateSeatRequestDto updateSeatDto) {
+    public UpdateSeatResponseDto update(UUID id, UpdateSeatRequestDto updateSeatDto) {
 
+        // 1. Get the DB data.
         Seat seatDB = this.seatRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Seat with id " + id + " not found"));
 
@@ -89,6 +103,29 @@ public class SeatService {
 
         if (updateSeatDto.state() != null) {
             seatDB.setState(updateSeatDto.state());
+        }
+
+        // 2.1 If a user ID is provided when updating a seat,
+        // it means the user wants to reserve it.
+        if (updateSeatDto.userId().isPresent()) {
+            // 2.1.1 Extract the user ID from the request DTO.
+            UUID userId = updateSeatDto.userId().get();
+
+            // 2.1.2 Check if the user exists in the database.
+            User userDB = userRepository.findById(userId)
+                    .orElseThrow(() -> new ResourceNotFoundException("User with id " + userId + " not found."));
+
+            // 2.1.3 Verify that the user has not already reserved a seat for this event
+            boolean existsReserveSeat = seatRepository.existsByEventIdAndUserId(seatDB.getEvent().getId(), userId);
+
+            // 2.1.4 If the user has already reserved a seat, throw a conflict error.
+            if (existsReserveSeat) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "The user " + userId + " already has reserved a seat for this event.");
+            }
+
+            // 2.1.5 Associate the user with the seat in the db.
+            seatDB.setUserId(userDB);
         }
 
         // 3. Save the changes in DB.
@@ -106,6 +143,6 @@ public class SeatService {
                 throw new InternalError(e.getMessage());
             }
         }
-        return SeatMapper.INSTANCE.toSeatDto(updatedSeat);
+        return SeatMapper.INSTANCE.toUpdateSeatResponseDto(updatedSeat);
     }
 }

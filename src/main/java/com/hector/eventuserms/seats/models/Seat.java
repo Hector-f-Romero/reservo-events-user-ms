@@ -5,6 +5,7 @@ import java.util.UUID;
 import com.hector.eventuserms.common.models.BaseEntity;
 import com.hector.eventuserms.events.models.Event;
 import com.hector.eventuserms.seats.enums.SeatState;
+import com.hector.eventuserms.users.models.User;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
@@ -50,8 +51,8 @@ public class Seat extends BaseEntity {
     @ManyToOne(fetch = FetchType.LAZY)
     @JoinColumn(name = "eventId", nullable = false)
     private Event event;
-}
 
-// @ManyToOne(fetch = FetchType.LAZY)
-// @JoinColumn(name = "userId")
-// private User userId;
+    @ManyToOne(fetch = FetchType.LAZY)
+    @JoinColumn(name = "userId", nullable = true)
+    private User userId;
+}

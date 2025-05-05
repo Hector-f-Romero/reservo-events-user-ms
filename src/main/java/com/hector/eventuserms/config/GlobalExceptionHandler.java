@@ -14,6 +14,7 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
+import org.springframework.web.server.ResponseStatusException;
 
 import com.hector.eventuserms.exception.ApiError;
 import com.hector.eventuserms.exception.ResourceNotFoundException;
@@ -23,112 +24,124 @@ import jakarta.servlet.http.HttpServletRequest;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ResponseEntity<ApiError> handleValidationExceptions(MethodArgumentNotValidException ex,
-            HttpServletRequest request) {
+        @ExceptionHandler(MethodArgumentNotValidException.class)
+        public ResponseEntity<ApiError> handleValidationExceptions(MethodArgumentNotValidException ex,
+                        HttpServletRequest request) {
 
-        // Crear un mensaje que contenga todos los errores de validación
-        StringBuilder errorMessage = new StringBuilder("Validation failed: ");
+                // Crear un mensaje que contenga todos los errores de validación
+                StringBuilder errorMessage = new StringBuilder("Validation failed: ");
 
-        List<String> validationErrors = new ArrayList<>();
+                List<String> validationErrors = new ArrayList<>();
 
-        for (FieldError error : ex.getBindingResult().getFieldErrors()) {
-            validationErrors.add(error.getField() + ": " + error.getDefaultMessage());
+                for (FieldError error : ex.getBindingResult().getFieldErrors()) {
+                        validationErrors.add(error.getField() + ": " + error.getDefaultMessage());
+                }
+
+                errorMessage.append(String.join(", ", validationErrors));
+
+                ApiError apiError = new ApiError(
+                                request.getRequestURI(),
+                                errorMessage.toString(),
+                                HttpStatus.BAD_REQUEST.value(),
+                                LocalDateTime.now());
+
+                return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
         }
 
-        errorMessage.append(String.join(", ", validationErrors));
+        @ExceptionHandler(ResourceNotFoundException.class)
+        public ResponseEntity<ApiError> handleNotFoundException(ResourceNotFoundException ex,
+                        HttpServletRequest request) {
 
-        ApiError apiError = new ApiError(
-                request.getRequestURI(),
-                errorMessage.toString(),
-                HttpStatus.BAD_REQUEST.value(),
-                LocalDateTime.now());
+                ApiError apiError = new ApiError(request.getRequestURI(), ex.getMessage(), HttpStatus.NOT_FOUND.value(),
+                                LocalDateTime.now());
 
-        return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
-    }
+                return new ResponseEntity<>(apiError, HttpStatus.NOT_FOUND);
+        }
 
-    @ExceptionHandler(ResourceNotFoundException.class)
-    public ResponseEntity<ApiError> handleNotFoundException(ResourceNotFoundException ex, HttpServletRequest request) {
+        @ExceptionHandler(DataIntegrityViolationException.class)
+        public ResponseEntity<ApiError> handleDataIntegrityViolationException(DataIntegrityViolationException ex,
+                        HttpServletRequest request) {
+                ApiError apiError = new ApiError(request.getRequestURI(), ex.getMessage(), HttpStatus.CONFLICT.value(),
+                                LocalDateTime.now());
 
-        ApiError apiError = new ApiError(request.getRequestURI(), ex.getMessage(), HttpStatus.NOT_FOUND.value(),
-                LocalDateTime.now());
+                return new ResponseEntity<>(apiError, HttpStatus.CONFLICT);
 
-        return new ResponseEntity<>(apiError, HttpStatus.NOT_FOUND);
-    }
+        }
 
-    @ExceptionHandler(DataIntegrityViolationException.class)
-    public ResponseEntity<ApiError> handleDataIntegrityViolationException(DataIntegrityViolationException ex,
-            HttpServletRequest request) {
-        ApiError apiError = new ApiError(request.getRequestURI(), ex.getMessage(), HttpStatus.CONFLICT.value(),
-                LocalDateTime.now());
+        // Handles MethodArgumentTypeMismatchException which occurs when a request
+        // parameter cannot be converted to the required type (e.g., when a UUID is
+        // invalid).
+        @ExceptionHandler(MethodArgumentTypeMismatchException.class)
+        public ResponseEntity<ApiError> handleTypeMismatchException(MethodArgumentTypeMismatchException ex,
+                        HttpServletRequest request) {
+                String errorMessage = String.format("Parameter '%s' must be %s.",
+                                ex.getName(),
+                                ex.getRequiredType().getSimpleName());
 
-        return new ResponseEntity<>(apiError, HttpStatus.CONFLICT);
+                ApiError apiError = new ApiError(
+                                request.getRequestURI(),
+                                errorMessage,
+                                HttpStatus.BAD_REQUEST.value(),
+                                LocalDateTime.now());
 
-    }
+                return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
+        }
 
-    // Handles MethodArgumentTypeMismatchException which occurs when a request
-    // parameter cannot be converted to the required type (e.g., when a UUID is
-    // invalid).
-    @ExceptionHandler(MethodArgumentTypeMismatchException.class)
-    public ResponseEntity<ApiError> handleTypeMismatchException(MethodArgumentTypeMismatchException ex,
-            HttpServletRequest request) {
-        String errorMessage = String.format("Parameter '%s' must be %s.",
-                ex.getName(),
-                ex.getRequiredType().getSimpleName());
+        // Handles HttpMessageNotReadableException which occurs when the request body
+        // cannot be deserialized to the expected Java type.
+        @ExceptionHandler(HttpMessageNotReadableException.class)
+        public ResponseEntity<ApiError> handleHttpMessageNotReadable(HttpMessageNotReadableException ex,
+                        HttpServletRequest request) {
+                String errorMessage = "Error procesing input JSON: " + ex.getMessage();
 
-        ApiError apiError = new ApiError(
-                request.getRequestURI(),
-                errorMessage,
-                HttpStatus.BAD_REQUEST.value(),
-                LocalDateTime.now());
+                ApiError apiError = new ApiError(
+                                request.getRequestURI(),
+                                errorMessage,
+                                HttpStatus.BAD_REQUEST.value(),
+                                LocalDateTime.now());
 
-        return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
-    }
+                return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
+        }
 
-    // Handles HttpMessageNotReadableException which occurs when the request body
-    // cannot be deserialized to the expected Java type.
-    @ExceptionHandler(HttpMessageNotReadableException.class)
-    public ResponseEntity<ApiError> handleHttpMessageNotReadable(HttpMessageNotReadableException ex,
-            HttpServletRequest request) {
-        String errorMessage = "Error procesing input JSON: " + ex.getMessage();
+        // Handles TypeMismatchException which is the base class for data type
+        // conversion errors in Spring.
+        @ExceptionHandler(TypeMismatchException.class)
+        public ResponseEntity<ApiError> handleTypeMismatchException(TypeNotPresentException ex,
+                        HttpServletRequest request) {
+                String errorMessage = "Type error: " + ex.getMessage();
 
-        ApiError apiError = new ApiError(
-                request.getRequestURI(),
-                errorMessage,
-                HttpStatus.BAD_REQUEST.value(),
-                LocalDateTime.now());
+                ApiError apiError = new ApiError(
+                                request.getRequestURI(),
+                                errorMessage,
+                                HttpStatus.BAD_REQUEST.value(),
+                                LocalDateTime.now());
 
-        return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
-    }
+                return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
 
-    // Handles TypeMismatchException which is the base class for data type
-    // conversion errors in Spring.
-    @ExceptionHandler(TypeMismatchException.class)
-    public ResponseEntity<ApiError> handleTypeMismatchException(TypeNotPresentException ex,
-            HttpServletRequest request) {
-        String errorMessage = "Type error: " + ex.getMessage();
+        }
 
-        ApiError apiError = new ApiError(
-                request.getRequestURI(),
-                errorMessage,
-                HttpStatus.BAD_REQUEST.value(),
-                LocalDateTime.now());
+        // This handler processes exceptions explicitly thrown with a custom HTTP code
+        // and message.
+        @ExceptionHandler(ResponseStatusException.class)
+        public ResponseEntity<ApiError> handleResponseStatusException(ResponseStatusException ex,
+                        HttpServletRequest request) {
+                ApiError apiError = new ApiError(request.getRequestURI(), ex.getReason(), ex.getStatusCode().value(),
+                                LocalDateTime.now());
 
-        return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
+                return new ResponseEntity<>(apiError, ex.getStatusCode());
+        }
 
-    }
+        // Handles any exception not caught by other specific handlers. This is the last
+        // resort for unexpected errors.
+        @ExceptionHandler(Exception.class)
+        public ResponseEntity<ApiError> handleGenericException(Exception ex, HttpServletRequest request) {
+                ApiError apiError = new ApiError(
+                                request.getRequestURI(),
+                                "Server error: " + ex.getMessage(),
+                                HttpStatus.INTERNAL_SERVER_ERROR.value(),
+                                LocalDateTime.now());
 
-    // Handles any exception not caught by other specific handlers. This is the last
-    // resort for unexpected errors.
-    @ExceptionHandler(Exception.class)
-    public ResponseEntity<ApiError> handleGenericException(Exception ex, HttpServletRequest request) {
-        ApiError apiError = new ApiError(
-                request.getRequestURI(),
-                "Server error: " + ex.getMessage(),
-                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                LocalDateTime.now());
-
-        return new ResponseEntity<>(apiError, HttpStatus.INTERNAL_SERVER_ERROR);
-    }
+                return new ResponseEntity<>(apiError, HttpStatus.INTERNAL_SERVER_ERROR);
+        }
 
 }
