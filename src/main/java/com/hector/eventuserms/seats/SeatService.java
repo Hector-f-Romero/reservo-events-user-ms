@@ -108,23 +108,33 @@ public class SeatService {
         // 2.1 If a user ID is provided when updating a seat,
         // it means the user wants to reserve it.
         if (updateSeatDto.userId().isPresent()) {
-            // 2.1.1 Extract the user ID from the request DTO.
+
+            // 2.1.1 First, verify in DB if the seat is available.
+            boolean isSeatAvailable = seatRepository.isAvailableToReserve(seatDB.getId());
+
+            // 2.1.2 If the seat already has assigned a userId, return an error for client.
+            if (!isSeatAvailable) {
+                throw new ResponseStatusException(HttpStatus.CONFLICT,
+                        "The seat " + seatDB.getTag() + " already has reserved.");
+            }
+
+            // 2.1.3 Extract the user ID from the request DTO.
             UUID userId = updateSeatDto.userId().get();
 
-            // 2.1.2 Check if the user exists in the database.
+            // 2.1.4 Check if the user exists in the database.
             User userDB = userRepository.findById(userId)
                     .orElseThrow(() -> new ResourceNotFoundException("User with id " + userId + " not found."));
 
-            // 2.1.3 Verify that the user has not already reserved a seat for this event
+            // 2.1.5 Verify that the user has not already reserved a seat for this event
             boolean existsReserveSeat = seatRepository.existsByEventIdAndUserId(seatDB.getEvent().getId(), userId);
 
-            // 2.1.4 If the user has already reserved a seat, throw a conflict error.
+            // 2.1.6 If the user has already reserved a seat, throw a conflict error.
             if (existsReserveSeat) {
                 throw new ResponseStatusException(HttpStatus.CONFLICT,
                         "The user " + userId + " already has reserved a seat for this event.");
             }
 
-            // 2.1.5 Associate the user with the seat in the db.
+            // 2.1.7 Associate the user with the seat in the db.
             seatDB.setUserId(userDB);
         }
 

@@ -12,6 +12,16 @@ import com.hector.eventuserms.seats.models.Seat;
 public interface SeatRepository extends JpaRepository<Seat, UUID> {
 
     @Query(value = """
+                  SELECT CASE
+                      WHEN COUNT(s) > 0 THEN TRUE
+                      ELSE FALSE
+                  END
+                  FROM seats as s
+            WHERE s.id = :seatId AND s.userid IS NULL;
+                  """, nativeQuery = true)
+    boolean isAvailableToReserve(@Param("seatId") UUID seatId);
+
+    @Query(value = """
             SELECT CASE
                 WHEN COUNT(s) > 0 THEN TRUE
                 ELSE FALSE
