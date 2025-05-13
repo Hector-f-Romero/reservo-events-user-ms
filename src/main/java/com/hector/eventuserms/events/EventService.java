@@ -1,6 +1,7 @@
 package com.hector.eventuserms.events;
 
 import java.time.Instant;
+import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -63,6 +64,10 @@ public class EventService {
                 }).collect(Collectors.toList());
 
         return upcomingEventList;
+    }
+
+    public List<Object> findUpcomingEventsToday(OffsetDateTime userDate) {
+        return eventRepository.findUpcomingEventsToday(userDate);
     }
 
     public FindOneEventResponseDto findOne(UUID id) {
