@@ -8,6 +8,7 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
 
 import com.hector.eventuserms.events.dtos.request.CreateEventRequestDto;
@@ -38,6 +39,7 @@ public class EventService {
         this.seatRepository = seatRepository;
     }
 
+    @Transactional
     public List<FindEventsResponseDto> find() {
         return eventRepository.findAll().stream()
                 .map(event -> {
@@ -70,6 +72,7 @@ public class EventService {
         return eventRepository.findUpcomingEventsToday(userDate);
     }
 
+    @Transactional
     public FindOneEventResponseDto findOne(UUID id) {
         // 1. Try to find and event in DB
         Event eventDB = eventRepository.findById(id)
@@ -89,8 +92,11 @@ public class EventService {
 
         // 2. Map the dto to JPA class
         Event mappedEvent = EventMapper.INSTANCE.toEntity(createEventDto);
+
         // 3. Put the User object in organizedBy property.
         mappedEvent.setOrganizedBy(organizer);
+
+        // TODO: create validation to avoid create an event in the same date.
 
         // 4. Save the event document in DB.
         Event eventDB = eventRepository.save(mappedEvent);
@@ -109,6 +115,7 @@ public class EventService {
 
         // 8. Convert db object into DTo
         CreateEventResponseDto responseEvent = EventMapper.INSTANCE.toCreateEventResponseDto(eventDB);
+
         return responseEvent;
     }
 }
