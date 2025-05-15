@@ -8,7 +8,6 @@ import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
-import org.hibernate.Hibernate;
 import org.springframework.stereotype.Service;
 
 import com.hector.eventuserms.events.dtos.request.CreateEventRequestDto;
