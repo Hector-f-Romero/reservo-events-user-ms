@@ -46,14 +46,14 @@ public class SeatService {
         Seat seatDB = seatRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("Seat with id " + id + " not found."));
 
-        System.out.println("----------------------------------");
-        System.out.println(seatDB.toString());
-        // System.out.println(seatDB.getUserId());
-
         return SeatMapper.INSTANCE.toSeatDto(seatDB);
     }
 
     public CreateSeatResponseDto create(CreateSeatRequestDto createSeatDto) {
+
+        // TODO: validar que no se creen seats en un mismo evento con la misma tag.
+        // TODO: validar que no se creen más seats que la cantidad máxima de aforo del
+        // auditorio.
 
         // 1. Search in DB the eventId
         Event eventDB = eventRepository.findById(createSeatDto.eventId()).orElseThrow(
