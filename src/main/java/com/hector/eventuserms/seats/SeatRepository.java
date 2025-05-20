@@ -1,6 +1,5 @@
 package com.hector.eventuserms.seats;
 
-import java.util.List;
 import java.util.UUID;
 
 import org.springframework.data.jpa.repository.JpaRepository;

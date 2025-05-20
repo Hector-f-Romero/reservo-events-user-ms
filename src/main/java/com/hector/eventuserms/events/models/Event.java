@@ -4,8 +4,6 @@ import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
 
-import org.apache.commons.lang3.builder.ToStringExclude;
-
 import com.hector.eventuserms.common.models.BaseEntity;
 import com.hector.eventuserms.seats.models.Seat;
 import com.hector.eventuserms.users.models.User;
