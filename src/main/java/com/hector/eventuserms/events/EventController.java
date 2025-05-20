@@ -43,13 +43,13 @@ public class EventController {
     }
 
     @Operation(summary = "Get upcoming event list", description = "Returns a list of upcoming events, showing only those with available seats and a future date.")
-    @GetMapping("/upcoming")
+    @GetMapping("/upcoming-detailed")
     public List<FindUpcomingEventResponseDto> getUpcomingEvents() {
         return eventService.findUpcoming();
     }
 
     @Operation(summary = "Get upcoming events for a specific day", description = "Returns a list of events scheduled on the provided date (UTC offset must be included).")
-    @GetMapping("/upcoming/today")
+    @GetMapping("/upcoming")
     public List<Object> getUpcomingEventsToday(
             @Valid @RequestParam("date") @Parameter(description = "Date in ISO 8601 format with time zone offset (e.g., 2025-05-13T00:00:00Z)", required = true) OffsetDateTime date) {
         return eventService.findUpcomingEventsToday(date);

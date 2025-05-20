@@ -50,6 +50,8 @@ public class EventService {
     public List<FindUpcomingEventResponseDto> findUpcoming() {
         var results = eventRepository.findUpcomingEventsWithAvailableSeats(ZonedDateTime.now());
 
+        System.out.println("FIND UPCOMING SIN FECHA");
+
         List<FindUpcomingEventResponseDto> upcomingEventList = results.stream()
                 .map(result -> {
                     UUID id = (UUID) result[0];
