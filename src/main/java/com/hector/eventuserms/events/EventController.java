@@ -1,6 +1,6 @@
 package com.hector.eventuserms.events;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -51,8 +51,8 @@ public class EventController {
     @Operation(summary = "Get upcoming events for a specific day", description = "Returns a list of events scheduled on the provided date (UTC offset must be included).")
     @GetMapping("/upcoming")
     public List<Object> getUpcomingEventsToday(
-            @Valid @RequestParam("date") @Parameter(description = "Date in ISO 8601 format with time zone offset (e.g., 2025-05-13T00:00:00Z)", required = true) OffsetDateTime date) {
-        return eventService.findUpcomingEventsToday(date);
+            @Valid @RequestParam("date") @Parameter(description = "Date in ISO 8601 format with time zone offset (e.g., 2025-05-13T00:00:00Z)", required = true) Instant date) {
+        return eventService.findUpcomingEventsByDate(date);
     }
 
     @Operation(summary = "Get an event by ID", description = "Returns complete information for a specific event using its UUID.")

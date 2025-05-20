@@ -1,6 +1,8 @@
 package com.hector.eventuserms.common.nats;
 
 import java.nio.charset.StandardCharsets;
+import java.util.HashMap;
+import java.util.Map;
 
 import org.springframework.stereotype.Component;
 
@@ -91,10 +93,16 @@ public class NatsMessageProcessor {
         try {
 
             // 1. Manually build a JSON error string.
-            String errorResponse = "{\"error\": \"" + error + "\"}";
+            Map<String, Object> errorPayload = new HashMap<>();
+            errorPayload.put("status", 400);
+            errorPayload.put("message", error);
+            errorPayload.put("code", 400);
+
+            String error1 = this.objectMapper.writeValueAsString(errorPayload);
 
             // 2. Send the error as UTF-8 bytes to the replyTo subject
-            natsConnection.publish(message.getReplyTo(), errorResponse.getBytes(StandardCharsets.UTF_8));
+            natsConnection.publish(message.getReplyTo(), error1.getBytes(StandardCharsets.UTF_8));
+            System.out.println("Sending error response: " + error1);
         } catch (Exception e) {
             System.err.println("Error sending error response: " + e.getMessage());
         }

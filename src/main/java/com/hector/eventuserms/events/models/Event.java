@@ -1,6 +1,6 @@
 package com.hector.eventuserms.events.models;
 
-import java.time.ZonedDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -49,7 +49,7 @@ public class Event extends BaseEntity {
     private String description;
 
     @Column(nullable = false)
-    private ZonedDateTime date;
+    private Instant date;
 
     @Column(nullable = false)
     @Positive

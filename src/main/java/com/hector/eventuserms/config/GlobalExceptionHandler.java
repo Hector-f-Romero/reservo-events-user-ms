@@ -17,12 +17,22 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import org.springframework.web.server.ResponseStatusException;
 
 import com.hector.eventuserms.exception.ApiError;
+import com.hector.eventuserms.exception.AppServiceException;
 import com.hector.eventuserms.exception.ResourceNotFoundException;
 
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
+
+        @ExceptionHandler(AppServiceException.class)
+        public ResponseEntity<ApiError> hanldeServiceException(AppServiceException ex, HttpServletRequest request) {
+
+                ApiError apiError = new ApiError(request.getRequestURI(), ex.getMessage(), ex.getHttpStatus().value(),
+                                LocalDateTime.now());
+
+                return new ResponseEntity<>(apiError, ex.getHttpStatus());
+        }
 
         @ExceptionHandler(MethodArgumentNotValidException.class)
         public ResponseEntity<ApiError> handleValidationExceptions(MethodArgumentNotValidException ex,
@@ -74,9 +84,16 @@ public class GlobalExceptionHandler {
         @ExceptionHandler(MethodArgumentTypeMismatchException.class)
         public ResponseEntity<ApiError> handleTypeMismatchException(MethodArgumentTypeMismatchException ex,
                         HttpServletRequest request) {
-                String errorMessage = String.format("Parameter '%s' must be %s.",
-                                ex.getName(),
-                                ex.getRequiredType().getSimpleName());
+
+                // Obtener el nombre del parámetro que causó el error
+                String paramName = ex.getName();
+
+                // Obtener el tipo requerido, manejando el caso en que sea null
+                Class<?> requiredType = ex.getRequiredType();
+                String typeName = requiredType != null ? requiredType.getSimpleName() : "a valid type";
+
+                // Construir el mensaje de error
+                String errorMessage = String.format("Parameter '%s' must be %s.", paramName, typeName);
 
                 ApiError apiError = new ApiError(
                                 request.getRequestURI(),

@@ -1,6 +1,6 @@
 package com.hector.eventuserms.events;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
@@ -28,8 +28,8 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
 
         @Query(value = """
                         SELECT e.date FROM events as e
-                        WHERE e.date >= :today
-                        AND (e.date < CAST(:today AS DATE) + INTERVAL '1 day')
+                        WHERE e.date >= :requestedDate
+                        AND (e.date < CAST(:requestedDate AS DATE) + INTERVAL '1 day')
                         """, nativeQuery = true)
-        List<Object> findUpcomingEventsToday(@Param("today") OffsetDateTime today);
+        List<Object> findUpcomingEventsByDate(@Param("requestedDate") Instant requestedDate);
 }

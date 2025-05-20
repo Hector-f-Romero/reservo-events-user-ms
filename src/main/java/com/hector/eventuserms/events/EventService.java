@@ -1,13 +1,13 @@
 package com.hector.eventuserms.events;
 
 import java.time.Instant;
-import java.time.OffsetDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
 
 import com.hector.eventuserms.events.dtos.request.CreateEventRequestDto;
@@ -16,6 +16,7 @@ import com.hector.eventuserms.events.dtos.response.FindUpcomingEventResponseDto;
 import com.hector.eventuserms.events.dtos.response.FindEventsResponseDto;
 import com.hector.eventuserms.events.dtos.response.FindOneEventResponseDto;
 import com.hector.eventuserms.events.models.Event;
+import com.hector.eventuserms.exception.AppServiceException;
 import com.hector.eventuserms.exception.ResourceNotFoundException;
 import com.hector.eventuserms.seats.SeatRepository;
 import com.hector.eventuserms.seats.enums.SeatState;
@@ -69,8 +70,8 @@ public class EventService {
         return upcomingEventList;
     }
 
-    public List<Object> findUpcomingEventsToday(OffsetDateTime userDate) {
-        return eventRepository.findUpcomingEventsToday(userDate);
+    public List<Object> findUpcomingEventsByDate(Instant userDate) {
+        return eventRepository.findUpcomingEventsByDate(userDate);
     }
 
     @Transactional
@@ -91,30 +92,36 @@ public class EventService {
                 .orElseThrow(() -> new ResourceNotFoundException(
                         "User with id" + createEventDto.organizedBy() + " not found."));
 
-        // 2. Map the dto to JPA class
+        // 2. Validate that the new event is scheduled in a non-occupied slot.
+        var upcomingEvents = this.findUpcomingEventsByDate(createEventDto.date());
+
+        if (upcomingEvents.contains(createEventDto.date())) {
+            throw new AppServiceException(HttpStatus.BAD_REQUEST,
+                    "There is an event registered for the date " + createEventDto.date());
+        }
+
+        // 3. Map the dto to JPA class
         Event mappedEvent = EventMapper.INSTANCE.toEntity(createEventDto);
 
-        // 3. Put the User object in organizedBy property.
+        // 4. Put the User object in organizedBy property.
         mappedEvent.setOrganizedBy(organizer);
 
-        // TODO: create validation to avoid create an event in the same date.
-
-        // 4. Save the event document in DB.
+        // 5. Save the event document in DB.
         Event eventDB = eventRepository.save(mappedEvent);
 
-        // 5. Create the seats related to event.
+        // 6. Create the seats related to event.
         List<Seat> seatsList = createEventDto.seats()
                 .stream()
                 .map(seatTag -> Seat.builder().tag(seatTag).state(SeatState.AVAILABLE).event(eventDB).build())
                 .collect(Collectors.toList());
 
-        // 6. Save the seats data in DB.
+        // 7. Save the seats data in DB.
         List<Seat> seatsDB = seatRepository.saveAll(seatsList);
 
-        // 7. Adds seat information to the previously created event object.
+        // 8. Adds seat information to the previously created event object.
         eventDB.setSeats(seatsDB);
 
-        // 8. Convert db object into DTo
+        // 9. Convert db object into DTo
         CreateEventResponseDto responseEvent = EventMapper.INSTANCE.toCreateEventResponseDto(eventDB);
 
         return responseEvent;

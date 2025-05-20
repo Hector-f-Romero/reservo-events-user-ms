@@ -1,11 +1,9 @@
 package com.hector.eventuserms.events;
 
-import java.time.OffsetDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.databind.JsonNode;
@@ -37,8 +35,6 @@ public class EventNatsController {
     private static final String SUBJECT_GET_UPCOMING_EVENTS_TODAY = SUBJECT_BASE + "get.upcoming.today";
     private static final String SUBJECT_GET_ID = SUBJECT_BASE + "get.id";
     private static final String SUBJECT_CREATE = SUBJECT_BASE + "create";
-
-    private static final Logger log = LoggerFactory.getLogger(EventNatsController.class);
 
     public EventNatsController(EventService eventService, Connection natsConnection, ObjectMapper objectMapper,
             NatsMessageProcessor natsMessageProcessor) {
@@ -88,15 +84,16 @@ public class EventNatsController {
         try {
 
             // 1. Parse the data received from NATS.
-            OffsetDateTime date = OffsetDateTime.parse(this.natsMessageProcessor.extractDataFromJson(msg).asText());
+            Instant date = Instant.parse(this.natsMessageProcessor.extractDataFromJson(msg).asText());
 
             // 2. Use the service to return upcoming events today.
-            var result = eventService.findUpcomingEventsToday(date);
+            var result = eventService.findUpcomingEventsByDate(date);
 
             // 3. Send the data to NATS
             this.natsMessageProcessor.sendResponse(msg, result);
 
         } catch (Exception e) {
+
             this.natsMessageProcessor.sendError(msg, e.getMessage());
         }
     }
@@ -112,6 +109,7 @@ public class EventNatsController {
             // 3. Send the data to NATS
             this.natsMessageProcessor.sendResponse(msg, objectMapper.writeValueAsString(event));
         } catch (Exception e) {
+
             this.natsMessageProcessor.sendError(msg, e.getMessage());
         }
     }

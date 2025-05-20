@@ -1,6 +1,6 @@
 package com.hector.eventuserms.events.dtos.response;
 
-import java.time.ZonedDateTime;
+import java.time.Instant;
 import java.util.List;
 import java.util.UUID;
 
@@ -12,7 +12,7 @@ public record CreateEventResponseDto(
                 UUID id,
                 String name,
                 String description,
-                ZonedDateTime date,
+                Instant date,
                 short capacity,
                 UserDto organizedBy,
                 List<SeatSummaryDto> seats) {
