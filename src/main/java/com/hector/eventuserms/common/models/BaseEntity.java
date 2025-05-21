@@ -19,7 +19,7 @@ import lombok.Setter;
 @Getter
 @Setter
 @FilterDef(name = "activeFilter", parameters = @ParamDef(name = "isActive", type = Boolean.class))
-@Filter(name = "activeFilter", condition = "isActive = :isActive")
+@Filter(name = "activeFilter", condition = "\"isActive\" = :isActive")
 public abstract class BaseEntity {
 
     @CreationTimestamp
