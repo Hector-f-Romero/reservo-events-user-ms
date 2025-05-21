@@ -29,10 +29,7 @@ import jakarta.validation.Valid;
 @RequestMapping("/users")
 public class UserController {
 
-    private UserService userService;
-
-    // private static final Logger logger =
-    // LoggerFactory.getLogger(UserService.class);
+    private final UserService userService;
 
     UserController(UserService userService) {
         this.userService = userService;
@@ -75,6 +72,6 @@ public class UserController {
     @DeleteMapping("/{id}")
     public ResponseEntity<?> deleteUser(@PathVariable @Valid UUID id) {
         userService.delete(id);
-        return ResponseEntity.ok("Ok");
+        return ResponseEntity.ok("User deleted successfully.");
     }
 }

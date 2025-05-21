@@ -34,7 +34,6 @@ public class UserService {
         this.entityManager = entityManager;
     }
 
-    // TODO: avoid return documents with isActive = false
     public List<UserDto> find() {
 
         // 1. Activate the filter to avoid return data with isActive property in false
@@ -46,14 +45,9 @@ public class UserService {
                 .toList();
     }
 
-    // TODO: avoid return documents with isActive = false
     public UserDto findOne(UUID id) {
 
-        // 1. Activate the filter to avoid return data with isActive property in false
-        Session session = entityManager.unwrap(Session.class);
-        session.enableFilter("activeFilter").setParameter("isActive", true);
-
-        // 2. Try to find the user in DB.
+        // 1. Try to find the user in DB.
         User userDB = userRepository.findById(id)
                 .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found."));
 
@@ -103,6 +97,10 @@ public class UserService {
             String hashedPassword = passwordEncoder.encode(updateUserDto.password());
 
             existUser.setPassword(hashedPassword);
+        }
+
+        if (updateUserDto.isActive().isPresent()) {
+            existUser.setIsActive(updateUserDto.isActive().get());
         }
 
         // 3. Save the changes in DB.
