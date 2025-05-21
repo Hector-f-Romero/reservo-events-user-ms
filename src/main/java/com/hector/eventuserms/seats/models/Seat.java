@@ -49,10 +49,10 @@ public class Seat extends BaseEntity {
     private SeatState state = SeatState.AVAILABLE;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "eventId", nullable = false)
+    @JoinColumn(name = "\"eventId\"", nullable = false)
     private Event event;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "userId", nullable = true)
+    @JoinColumn(name = "\"userId\"", nullable = true)
     private User userId;
 }

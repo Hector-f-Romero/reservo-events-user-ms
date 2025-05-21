@@ -24,15 +24,15 @@ public abstract class BaseEntity {
 
     @CreationTimestamp
     @JsonIgnore
-    @Column(name = "createdAt", nullable = false, updatable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE")
+    @Column(name = "\"createdAt\"", nullable = false, updatable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE")
     private Instant createdAt;
 
     @UpdateTimestamp
     @JsonIgnore
-    @Column(name = "updatedAt", nullable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE")
+    @Column(name = "\"updatedAt\"", nullable = false, columnDefinition = "TIMESTAMP WITH TIME ZONE")
     private Instant updatedAt;
 
-    @Column(name = "isActive", nullable = false)
+    @Column(name = "\"isActive\"", nullable = false)
     @JsonIgnore
     private Boolean isActive = true;
 }

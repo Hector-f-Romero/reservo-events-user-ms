@@ -56,7 +56,7 @@ public class Event extends BaseEntity {
     private short capacity;
 
     @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "organizedBy", nullable = false)
+    @JoinColumn(name = "\"organizedBy\"", nullable = false)
     private User organizedBy;
 
     @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
