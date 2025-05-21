@@ -1,6 +1,9 @@
 package com.hector.eventuserms.seats;
 
+import java.util.HashSet;
 import java.util.List;
+import java.util.Optional;
+import java.util.Set;
 import java.util.UUID;
 import java.util.stream.Collectors;
 
@@ -10,6 +13,7 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.hector.eventuserms.events.EventRepository;
 import com.hector.eventuserms.events.models.Event;
+import com.hector.eventuserms.exception.AppServiceException;
 import com.hector.eventuserms.exception.ResourceNotFoundException;
 import com.hector.eventuserms.seats.dtos.SeatSummaryDto;
 import com.hector.eventuserms.seats.dtos.request.CreateSeatRequestDto;
@@ -25,7 +29,6 @@ import jakarta.transaction.Transactional;
 
 @Service
 public class SeatService {
-
     private final SeatRepository seatRepository;
     private final EventRepository eventRepository;
     private final UserRepository userRepository;
@@ -48,17 +51,29 @@ public class SeatService {
         return SeatMapper.INSTANCE.toSeatDto(seatDB);
     }
 
+    @Transactional
     public CreateSeatResponseDto create(CreateSeatRequestDto createSeatDto) {
-
-        // TODO: validar que no se creen seats en un mismo evento con la misma tag.
-        // TODO: validar que no se creen más seats que la cantidad máxima de aforo del
-        // auditorio.
 
         // 1. Search in DB the eventId
         Event eventDB = eventRepository.findById(createSeatDto.eventId()).orElseThrow(
                 () -> new ResourceNotFoundException("Event with id " + createSeatDto.eventId() + " not found."));
 
-        // 2. Save in BD.
+        // 2. Verify that no more seats are created than the event allows.
+        if (eventDB.getSeats().size() >= (int) eventDB.getCapacity()) {
+            throw new AppServiceException(HttpStatus.CONFLICT,
+                    "The event has reached its maximum capacity. Can't create more seats.");
+        }
+
+        // 3 Ensure not seat exists with the same tag as the one provided in the
+        // request.
+        boolean tagExists = eventDB.getSeats().stream().anyMatch(seat -> seat.getTag().equals(createSeatDto.tag()));
+
+        if (tagExists) {
+            throw new AppServiceException(HttpStatus.CONFLICT,
+                    "A seat with the tag " + createSeatDto.tag() + " already exists.");
+        }
+
+        // 4. Save in BD.
         Seat newSeat = seatRepository.save(Seat.builder()
                 .tag(createSeatDto.tag())
                 .state(SeatState.AVAILABLE)
@@ -71,11 +86,46 @@ public class SeatService {
     @Transactional
     public List<CreateSeatResponseDto> createMany(List<String> seats, UUID eventId) {
 
-        // 1. Verify that exists an event with the id sent.
+        // 1. Ensure that not duplicate seat tags exist in the request.
+        boolean hasDuplicates = seats.size() != new HashSet<>(seats).size();
+
+        if (hasDuplicates) {
+            throw new AppServiceException(HttpStatus.BAD_REQUEST,
+                    "Duplicate seat tags are not allowed. Please review your request.");
+        }
+
+        // 2. Verify that exists an event with the id sent.
         Event event = eventRepository.findById(eventId)
                 .orElseThrow(() -> new ResourceNotFoundException("Event with " + eventId + " not found"));
 
-        // 2. Create the SeatDB object with the list sent
+        // 3. Verify that no more seats are created than the event allows.
+        if (event.getSeats().size() >= event.getCapacity()) {
+            throw new AppServiceException(HttpStatus.CONFLICT,
+                    "The event has reached its maximum capacity. Can't create more seats.");
+        }
+
+        // 4. Ensure that number of seats to be inserted doesn't exceed the event's
+        // capacity.
+        if (event.getSeats().size() + seats.size() > event.getCapacity()) {
+            throw new AppServiceException(HttpStatus.CONFLICT,
+                    "The number of seats you are trying to insert  exceeds the maxium capacity of the event.");
+        }
+
+        // 5. Get the existing tags from the event inside a Set. This is helpful to
+        // optimize the search.
+        Set<String> existingTags = event.getSeats().stream().map(Seat::getTag).collect(Collectors.toSet());
+
+        // 6. Ensure not seat exists with the same tag as the one provided in the
+        // request.
+        Optional<String> duplicateTag = seats.stream().filter(tag -> existingTags.contains(tag)).findFirst();
+
+        // 7. If a duplicate taghas been found, throw an error.
+        if (duplicateTag.isPresent()) {
+            throw new AppServiceException(HttpStatus.CONFLICT,
+                    "A seat with the tag " + duplicateTag.get() + " already exists.");
+        }
+
+        // 8. Create the SeatDB object with the list sent
         List<Seat> seatsList = seats.stream()
                 .map(tag -> Seat.builder()
                         .tag(tag).state(SeatState.AVAILABLE)
