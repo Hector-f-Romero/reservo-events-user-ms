@@ -10,6 +10,7 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hector.eventuserms.common.nats.NatsMessageProcessor;
 import com.hector.eventuserms.users.dtos.UserDto;
 import com.hector.eventuserms.users.dtos.requests.CreateUserRequestDto;
+import com.hector.eventuserms.users.dtos.requests.LoginUserRequestDto;
 import com.hector.eventuserms.users.dtos.requests.UpdateUserNatsRequestDto;
 import com.hector.eventuserms.users.dtos.requests.UpdateUserRequestDto;
 
@@ -33,6 +34,7 @@ public class UserNatsController {
     private final static String SUBJECT_CREATE = SUBJECT_BASE + "create";
     private final static String SUBJECT_UPDATE = SUBJECT_BASE + "update";
     private final static String SUBJECT_DELETE = SUBJECT_BASE + "delete";
+    private final static String SUBJECT_LOGIN = SUBJECT_BASE + "login";
 
     public UserNatsController(UserService userService, NatsMessageProcessor natsMessageProcessor,
             ObjectMapper objectMapper, Connection connection) {
@@ -52,6 +54,7 @@ public class UserNatsController {
         dispatcher.subscribe(SUBJECT_CREATE, (msg) -> handleCreateUser(msg));
         dispatcher.subscribe(SUBJECT_UPDATE, (msg) -> handleUpdateUser(msg));
         dispatcher.subscribe(SUBJECT_DELETE, (msg) -> handleDeleteUser(msg));
+        dispatcher.subscribe(SUBJECT_LOGIN, (msg) -> handleLoginUser(msg));
     }
 
     private void handleGetUsers(Message msg) {
@@ -134,6 +137,26 @@ public class UserNatsController {
             // 3. Send the data to NATS
             this.natsMessageProcessor.sendResponse(msg, "User deleted successfully.");
         } catch (Exception e) {
+            natsMessageProcessor.sendError(msg, e.getMessage());
+        }
+    }
+
+    private void handleLoginUser(Message msg) {
+        try {
+
+            // 1. Parse the data received from NATS.
+            LoginUserRequestDto loginUserRequestDto = this.objectMapper
+                    .treeToValue(this.natsMessageProcessor.extractDataFromJson(msg), LoginUserRequestDto.class);
+
+            // 2. Use the service.
+            UserDto loggedUser = userService.login(loginUserRequestDto);
+
+            // 3. Send the data to NATS.
+            this.natsMessageProcessor.sendResponse(msg, this.objectMapper.writeValueAsString(loggedUser));
+        } catch (Exception e) {
+            System.out.println("ERROR ------------------------");
+            System.out.println(e);
+
             natsMessageProcessor.sendError(msg, e.getMessage());
         }
     }

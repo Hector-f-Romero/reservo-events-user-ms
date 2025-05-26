@@ -4,10 +4,12 @@ import java.util.List;
 import java.util.UUID;
 
 import org.hibernate.Session;
+import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.firewall.RequestRejectedException;
 import org.springframework.stereotype.Service;
 
+import com.hector.eventuserms.exception.AppServiceException;
 import com.hector.eventuserms.exception.ResourceNotFoundException;
 import com.hector.eventuserms.users.dtos.UserDto;
 import com.hector.eventuserms.users.dtos.requests.CreateUserRequestDto;
@@ -127,7 +129,7 @@ public class UserService {
 
     public UserDto login(LoginUserRequestDto loginUserRequestDto) {
         User userDB = userRepository.findByUsername(loginUserRequestDto.username())
-                .orElseThrow(() -> new ResourceNotFoundException("Username not registered yet"));
+                .orElseThrow(() -> new AppServiceException(HttpStatus.NOT_FOUND, "Username not registered yet"));
 
         boolean matchPassword = passwordEncoder.matches(loginUserRequestDto.password(), userDB.getPassword());
 
