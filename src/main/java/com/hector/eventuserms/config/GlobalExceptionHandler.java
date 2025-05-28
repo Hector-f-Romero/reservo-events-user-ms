@@ -17,7 +17,6 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 import com.hector.eventuserms.exception.ApiError;
 import com.hector.eventuserms.exception.AppServiceException;
-import com.hector.eventuserms.exception.ResourceNotFoundException;
 
 import jakarta.servlet.http.HttpServletRequest;
 
@@ -55,16 +54,6 @@ public class GlobalExceptionHandler {
                                 Instant.now().toString());
 
                 return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
-        }
-
-        @ExceptionHandler(ResourceNotFoundException.class)
-        public ResponseEntity<ApiError> handleNotFoundException(ResourceNotFoundException ex,
-                        HttpServletRequest request) {
-
-                ApiError apiError = new ApiError(request.getRequestURI(), ex.getMessage(), HttpStatus.NOT_FOUND,
-                                Instant.now().toString());
-
-                return new ResponseEntity<>(apiError, HttpStatus.NOT_FOUND);
         }
 
         @ExceptionHandler(DataIntegrityViolationException.class)
