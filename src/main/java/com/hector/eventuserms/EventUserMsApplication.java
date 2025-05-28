@@ -2,10 +2,12 @@ package com.hector.eventuserms;
 
 import org.springframework.boot.SpringApplication;
 import org.springframework.boot.autoconfigure.SpringBootApplication;
+import org.springframework.context.annotation.EnableAspectJAutoProxy;
 
 import io.github.cdimascio.dotenv.Dotenv;
 
 @SpringBootApplication()
+@EnableAspectJAutoProxy
 public class EventUserMsApplication {
 
 	public static void main(String[] args) {

@@ -1,6 +1,6 @@
 package com.hector.eventuserms.config;
 
-import java.time.LocalDateTime;
+import java.time.Instant;
 import java.util.ArrayList;
 import java.util.List;
 
@@ -14,7 +14,6 @@ import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
-import org.springframework.web.server.ResponseStatusException;
 
 import com.hector.eventuserms.exception.ApiError;
 import com.hector.eventuserms.exception.AppServiceException;
@@ -28,8 +27,8 @@ public class GlobalExceptionHandler {
         @ExceptionHandler(AppServiceException.class)
         public ResponseEntity<ApiError> hanldeServiceException(AppServiceException ex, HttpServletRequest request) {
 
-                ApiError apiError = new ApiError(request.getRequestURI(), ex.getMessage(), ex.getHttpStatus().value(),
-                                LocalDateTime.now());
+                ApiError apiError = new ApiError(request.getRequestURI(), ex.getMessage(), ex.getHttpStatus(),
+                                Instant.now().toString());
 
                 return new ResponseEntity<>(apiError, ex.getHttpStatus());
         }
@@ -52,8 +51,8 @@ public class GlobalExceptionHandler {
                 ApiError apiError = new ApiError(
                                 request.getRequestURI(),
                                 errorMessage.toString(),
-                                HttpStatus.BAD_REQUEST.value(),
-                                LocalDateTime.now());
+                                HttpStatus.BAD_REQUEST,
+                                Instant.now().toString());
 
                 return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
         }
@@ -62,8 +61,8 @@ public class GlobalExceptionHandler {
         public ResponseEntity<ApiError> handleNotFoundException(ResourceNotFoundException ex,
                         HttpServletRequest request) {
 
-                ApiError apiError = new ApiError(request.getRequestURI(), ex.getMessage(), HttpStatus.NOT_FOUND.value(),
-                                LocalDateTime.now());
+                ApiError apiError = new ApiError(request.getRequestURI(), ex.getMessage(), HttpStatus.NOT_FOUND,
+                                Instant.now().toString());
 
                 return new ResponseEntity<>(apiError, HttpStatus.NOT_FOUND);
         }
@@ -71,8 +70,8 @@ public class GlobalExceptionHandler {
         @ExceptionHandler(DataIntegrityViolationException.class)
         public ResponseEntity<ApiError> handleDataIntegrityViolationException(DataIntegrityViolationException ex,
                         HttpServletRequest request) {
-                ApiError apiError = new ApiError(request.getRequestURI(), ex.getMessage(), HttpStatus.CONFLICT.value(),
-                                LocalDateTime.now());
+                ApiError apiError = new ApiError(request.getRequestURI(), ex.getMessage(), HttpStatus.CONFLICT,
+                                Instant.now().toString());
 
                 return new ResponseEntity<>(apiError, HttpStatus.CONFLICT);
 
@@ -98,8 +97,8 @@ public class GlobalExceptionHandler {
                 ApiError apiError = new ApiError(
                                 request.getRequestURI(),
                                 errorMessage,
-                                HttpStatus.BAD_REQUEST.value(),
-                                LocalDateTime.now());
+                                HttpStatus.BAD_REQUEST,
+                                Instant.now().toString());
 
                 return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
         }
@@ -114,8 +113,8 @@ public class GlobalExceptionHandler {
                 ApiError apiError = new ApiError(
                                 request.getRequestURI(),
                                 errorMessage,
-                                HttpStatus.BAD_REQUEST.value(),
-                                LocalDateTime.now());
+                                HttpStatus.BAD_REQUEST,
+                                Instant.now().toString());
 
                 return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
         }
@@ -130,22 +129,11 @@ public class GlobalExceptionHandler {
                 ApiError apiError = new ApiError(
                                 request.getRequestURI(),
                                 errorMessage,
-                                HttpStatus.BAD_REQUEST.value(),
-                                LocalDateTime.now());
+                                HttpStatus.BAD_REQUEST,
+                                Instant.now().toString());
 
                 return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
 
-        }
-
-        // This handler processes exceptions explicitly thrown with a custom HTTP code
-        // and message.
-        @ExceptionHandler(ResponseStatusException.class)
-        public ResponseEntity<ApiError> handleResponseStatusException(ResponseStatusException ex,
-                        HttpServletRequest request) {
-                ApiError apiError = new ApiError(request.getRequestURI(), ex.getReason(), ex.getStatusCode().value(),
-                                LocalDateTime.now());
-
-                return new ResponseEntity<>(apiError, ex.getStatusCode());
         }
 
         // Handles any exception not caught by other specific handlers. This is the last
@@ -155,8 +143,8 @@ public class GlobalExceptionHandler {
                 ApiError apiError = new ApiError(
                                 request.getRequestURI(),
                                 "Server error: " + ex.getMessage(),
-                                HttpStatus.INTERNAL_SERVER_ERROR.value(),
-                                LocalDateTime.now());
+                                HttpStatus.INTERNAL_SERVER_ERROR,
+                                Instant.now().toString());
 
                 return new ResponseEntity<>(apiError, HttpStatus.INTERNAL_SERVER_ERROR);
         }

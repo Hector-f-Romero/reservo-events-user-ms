@@ -78,7 +78,7 @@ public class EventService {
     public FindOneEventResponseDto findOne(UUID id) {
         // 1. Try to find and event in DB
         Event eventDB = eventRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Event not found."));
+                .orElseThrow(() -> new AppServiceException(HttpStatus.NOT_FOUND, "Event not found."));
 
         // return EventMapper.INSTANCE.toCreateEventResponseDto(eventDB);
         return EventMapper.INSTANCE.toFindOneEventDto(eventDB);

@@ -4,6 +4,7 @@ import java.nio.charset.StandardCharsets;
 import java.util.HashMap;
 import java.util.Map;
 
+import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonParseException;
@@ -11,6 +12,8 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.hector.eventuserms.exception.ApiError;
+import com.hector.eventuserms.exception.AppError;
 
 import io.nats.client.Connection;
 import io.nats.client.Message;
@@ -38,7 +41,6 @@ public class NatsMessageProcessor {
      * @throws JsonProcessingException If JSON parsing fails.
      */
     public JsonNode extractDataFromJson(Message msg) throws JsonMappingException, JsonProcessingException {
-
         // 1. Validate that args are not malformed.
         if (msg == null || msg.getData() == null) {
             throw new IllegalArgumentException("Message or message data cannot be null or empty.");
@@ -55,7 +57,7 @@ public class NatsMessageProcessor {
         JsonNode rootNode = this.objectMapper.readTree(requestJSON);
 
         // 4. Get the "data" field from the root node.
-        JsonNode dataNode = rootNode.get("data");
+        JsonNode dataNode = rootNode.get("data1");
 
         if (dataNode == null) {
             throw new JsonParseException("Missing required 'data' field in message");
@@ -63,6 +65,28 @@ public class NatsMessageProcessor {
 
         // 5. Return the "data" field.
         return dataNode;
+
+    }
+
+    // Este método tiene la funcionalidad de convertir una excepción checked en una
+    // unchecked. Gracias a esto, estas excepciones unchecked se pueden tratar por
+    // el aspecto sin declara un bloque try/catch.
+    public String objectToJson(Object object) throws JsonProcessingException {
+        return this.objectMapper.writeValueAsString(object);
+
+    }
+
+    /**
+     * Convierte un JsonNode a una instancia del tipo deseado, manejando excepciones
+     * como unchecked.
+     */
+    public <T> T fromJsonTree(JsonNode node, Class<T> valueType) {
+        try {
+            return this.objectMapper.treeToValue(node, valueType);
+        } catch (Exception e) {
+            throw new AppError("Failed to map JSON to " + valueType.getSimpleName(), HttpStatus.INTERNAL_SERVER_ERROR,
+                    e);
+        }
     }
 
     /**
@@ -73,14 +97,17 @@ public class NatsMessageProcessor {
      * @param response The response object to serialize and send back.
      * @throws JsonProcessingException If serialization of the response fails.
      */
-    public void sendResponse(Message msg, Object response) throws JsonProcessingException {
+    public void sendResponse(Message msg, Object response) {
+        try {
+            // 1. Serialize the response object into a JSON byte array.
+            byte[] responseData = this.objectMapper.writeValueAsBytes(response);
 
-        // 1. Serialize the response object into a JSON byte array.
-        byte[] responseData = this.objectMapper.writeValueAsBytes(response);
-
-        // 2. Publish the response to the replyTo subject provided in the original
-        // message.
-        natsConnection.publish(msg.getReplyTo(), responseData);
+            // 2. Publish the response to the replyTo subject provided in the original
+            // message.
+            natsConnection.publish(msg.getReplyTo(), responseData);
+        } catch (Exception e) {
+            throw new AppError(e);
+        }
     }
 
     /**
@@ -89,14 +116,14 @@ public class NatsMessageProcessor {
      * @param message The original NATS message with the replyTo address.
      * @param error   A string message describing the error.
      */
-    public void sendError(Message message, String error) {
+    public void sendError(Message message, ApiError error) {
         try {
 
             // 1. Manually build a JSON error string.
             Map<String, Object> errorPayload = new HashMap<>();
-            errorPayload.put("status", 400);
-            errorPayload.put("message", error);
-            errorPayload.put("code", 400);
+            errorPayload.put("status", error.status().name());
+            errorPayload.put("message", error.message());
+            errorPayload.put("code", error.status().value());
 
             String error1 = this.objectMapper.writeValueAsString(errorPayload);
 

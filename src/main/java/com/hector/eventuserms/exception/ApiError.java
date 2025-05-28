@@ -1,11 +1,11 @@
 package com.hector.eventuserms.exception;
 
-import java.time.LocalDateTime;
+import org.springframework.http.HttpStatus;
 
 public record ApiError(
                 String path,
                 String message,
-                int statusCode,
-                LocalDateTime localDateTime) {
+                HttpStatus status,
+                String timestamp) {
 
 }
