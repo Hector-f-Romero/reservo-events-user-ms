@@ -20,6 +20,9 @@ import org.aspectj.lang.annotation.Around;
 import org.aspectj.lang.annotation.Aspect;
 import org.aspectj.lang.annotation.Pointcut;
 
+/* Aspect responsible for intercepting functions annotated with @NatsHandler
+ * to centrally handle exceptions thrown during NATS-related logic execution.
+ */
 @Aspect
 @Component
 @Slf4j
@@ -32,54 +35,56 @@ public class NatsExcepionsAspect {
         this.natsMessageProcessor = natsMessageProcessor;
     }
 
-    // Definimos un PointCut para indicar cuando queremos interceptar métodos a lo
-    // largo de la aplicación. En este caso, queremos encontrar todos los métodos
-    // que tengan la anoación @NatsHandler.
-    // Le especificamos que 'natsHandler' será el parámetro que se le enviará a la
-    // anotación.
+    /**
+     * Defines a Pointcut to intercept methods annotated with @NatsHandler across
+     * the app.
+     */
     @Pointcut("@annotation(com.hector.eventuserms.common.annotations.NatsHandler)")
     public void natsHandlerMethods() {
     }
 
-    // Definimos qué queremos hacer cuando se intercepte el método
+    /**
+     * Around the Pointcut, defines logic to catch exceptions,
+     * extract the original NATS message, and delegate error handling.
+     */
     @Around("natsHandlerMethods()")
     public Object handleNatsExceptions(ProceedingJoinPoint joinPoint) throws Throwable {
 
-        log.info("SE HA INTERCEPTADO UNA FUNCIÓN GRACIAS AL ASPECTO MAMAGUEVO");
-
-        // 1. Obtenemos los argumentos del método interceptado
+        // 1. Get the arguments for the function intercepted.
         Object[] args = joinPoint.getArgs();
         NatsMessageEvent messageEvent = null;
 
-        // 2. Como podemos interceptar funciones con n cantidad de argumentos, vamos a
-        // recorrer el array de objetos "args"
+        /*
+         * 2. If we find an argument of type NatsMessageEvent, we assign it to
+         * 'messageEvent'.
+         * This gives us access to the original NATS Message, which includes metadata
+         * like
+         * the reply subject or client ID. This is crucial for sending error responses
+         * back to the appropriate client.
+         */
         for (Object arg : args) {
-
-            /*
-             * Si dentro de los argumentos encontramos uno de tipo NatsMessageEvent (NATS),
-             * extraemos su campo Message proveniente de NATS y lo
-             * almacenamos en la variable 'msg'. Esto será útil para saber el id del cliente
-             * NATS al que debo responderle con una excepción.
-             */
-
             if (arg instanceof NatsMessageEvent natsMessageEvent) {
                 messageEvent = natsMessageEvent;
                 break;
             }
         }
 
-        if (messageEvent.msg() == null) {
-            throw new AppError("You can't use the @NatsHandler annotation in functions without Message args.",
+        // 3. If the event is not present or invalid, throw a critical internal
+        // exception.
+        if (messageEvent == null || messageEvent.msg() == null) {
+            throw new AppError(
+                    "You can't use the @NatsHandler annotation on methods that not receive a NatsMessageEvent.",
                     HttpStatus.INTERNAL_SERVER_ERROR);
 
         }
 
         try {
 
-            // Ejecutar el método original
+            // 4. Proceed with the original method execution.
             return joinPoint.proceed();
 
         } catch (Exception e) {
+            // 5. If an exception occurs, handle and respond through NATS.
             this.handleExceptions(messageEvent.msg(), e, messageEvent.subject(), joinPoint.getSignature().getName());
             return null;
         }
@@ -90,9 +95,12 @@ public class NatsExcepionsAspect {
             String methodName) {
 
         ApiError apiError;
-        log.info("ERROR ENCONTRADO MAMAGUEVO");
+        log.info("An error was intercepted and is being processed by the NATS exception handler.");
 
-        // Hacemos el casteo al tipo de excepción correspondiente
+        /*
+         * 1. Identify the type of exception and build the corresponding ApiError
+         * object, including status code, error message, timestamp, and context.
+         */
         if (ex instanceof AppServiceException) {
             AppServiceException appEx = (AppServiceException) ex;
             apiError = new ApiError("NATS CONTROLLER - " + subject, appEx.getMessage(),
@@ -116,6 +124,7 @@ public class NatsExcepionsAspect {
                     Instant.now().toString());
         }
 
+        // 2. Send the formatted error response back to the NATS client.
         this.natsMessageProcessor.sendError(msg, apiError);
     }
 

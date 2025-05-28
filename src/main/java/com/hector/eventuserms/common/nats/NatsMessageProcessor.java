@@ -1,8 +1,6 @@
 package com.hector.eventuserms.common.nats;
 
 import java.nio.charset.StandardCharsets;
-import java.util.HashMap;
-import java.util.Map;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
@@ -12,6 +10,7 @@ import com.fasterxml.jackson.core.JsonProcessingException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.JsonNode;
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.fasterxml.jackson.databind.node.ObjectNode;
 import com.hector.eventuserms.exception.ApiError;
 import com.hector.eventuserms.exception.AppError;
 
@@ -68,17 +67,38 @@ public class NatsMessageProcessor {
 
     }
 
-    // Este método tiene la funcionalidad de convertir una excepción checked en una
-    // unchecked. Gracias a esto, estas excepciones unchecked se pueden tratar por
-    // el aspecto sin declara un bloque try/catch.
+    /**
+     * Converts a checked exception into an unchecked one during JSON serialization.
+     * <p>
+     * This method allows converting an object to its JSON representation using
+     * Jackson.
+     * By allowing the original {@link JsonProcessingException} to propagate,
+     * developers
+     * can choose to catch it or let it be handled by an AOP aspect without having
+     * to wrap
+     * every call in a try/catch block.
+     *
+     * @param object the object to serialize
+     * @return the JSON string representation of the object
+     * @throws JsonProcessingException if the serialization fails
+     */
     public String objectToJson(Object object) throws JsonProcessingException {
         return this.objectMapper.writeValueAsString(object);
 
     }
 
     /**
-     * Convierte un JsonNode a una instancia del tipo deseado, manejando excepciones
-     * como unchecked.
+     * Converts a {@link JsonNode} into an instance of the specified type.
+     * <p>
+     * Any exception thrown during the deserialization is wrapped and rethrown
+     * as a custom unchecked {@link AppError}, allowing it to be intercepted
+     * by AOP mechanisms without requiring explicit try/catch blocks.
+     *
+     * @param node      the JsonNode to convert
+     * @param valueType the target class type
+     * @param <T>       the type of the resulting object
+     * @return the deserialized object of type T
+     * @throws AppError if the conversion fails
      */
     public <T> T fromJsonTree(JsonNode node, Class<T> valueType) {
         try {
@@ -120,16 +140,17 @@ public class NatsMessageProcessor {
         try {
 
             // 1. Manually build a JSON error string.
-            Map<String, Object> errorPayload = new HashMap<>();
-            errorPayload.put("status", error.status().name());
-            errorPayload.put("message", error.message());
-            errorPayload.put("code", error.status().value());
+            ObjectNode errorPayload = this.objectMapper.createObjectNode()
+                    .put("status", error.status().name())
+                    .put("message", error.message())
+                    .put("code", error.status().value())
+                    .put("path", error.path());
 
-            String error1 = this.objectMapper.writeValueAsString(errorPayload);
+            String jsonError = errorPayload.toPrettyString();
 
             // 2. Send the error as UTF-8 bytes to the replyTo subject
-            natsConnection.publish(message.getReplyTo(), error1.getBytes(StandardCharsets.UTF_8));
-            System.out.println("Sending error response: " + error1);
+            natsConnection.publish(message.getReplyTo(), jsonError.getBytes(StandardCharsets.UTF_8));
+            System.out.println("Sending error response: " + jsonError);
         } catch (Exception e) {
             System.err.println("Error sending error response: " + e.getMessage());
         }
