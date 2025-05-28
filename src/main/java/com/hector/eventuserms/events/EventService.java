@@ -16,8 +16,8 @@ import com.hector.eventuserms.events.dtos.response.FindUpcomingEventResponseDto;
 import com.hector.eventuserms.events.dtos.response.FindEventsResponseDto;
 import com.hector.eventuserms.events.dtos.response.FindOneEventResponseDto;
 import com.hector.eventuserms.events.models.Event;
+import com.hector.eventuserms.exception.AppError;
 import com.hector.eventuserms.exception.AppServiceException;
-import com.hector.eventuserms.exception.ResourceNotFoundException;
 import com.hector.eventuserms.seats.SeatRepository;
 import com.hector.eventuserms.seats.enums.SeatState;
 import com.hector.eventuserms.seats.models.Seat;
@@ -89,8 +89,8 @@ public class EventService {
 
         // 1. First find the organized user by ID
         User organizer = userRepository.findById(createEventDto.organizedBy())
-                .orElseThrow(() -> new ResourceNotFoundException(
-                        "User with id" + createEventDto.organizedBy() + " not found."));
+                .orElseThrow(() -> new AppError(
+                        "User with id" + createEventDto.organizedBy() + " not found.", HttpStatus.NOT_FOUND));
 
         // 2. Validate that the new event is scheduled in a non-occupied slot.
         var upcomingEvents = this.findUpcomingEventsByDate(createEventDto.date());

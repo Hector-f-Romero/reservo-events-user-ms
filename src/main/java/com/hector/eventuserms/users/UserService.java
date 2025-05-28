@@ -9,8 +9,8 @@ import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.security.web.firewall.RequestRejectedException;
 import org.springframework.stereotype.Service;
 
+import com.hector.eventuserms.exception.AppError;
 import com.hector.eventuserms.exception.AppServiceException;
-import com.hector.eventuserms.exception.ResourceNotFoundException;
 import com.hector.eventuserms.users.dtos.UserDto;
 import com.hector.eventuserms.users.dtos.requests.CreateUserRequestDto;
 import com.hector.eventuserms.users.dtos.requests.LoginUserRequestDto;
@@ -51,7 +51,7 @@ public class UserService {
 
         // 1. Try to find the user in DB.
         User userDB = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found."));
+                .orElseThrow(() -> new AppError("User with id " + id + " not found.", HttpStatus.NOT_FOUND));
 
         return new UserDto(id, userDB.getName(), userDB.getUsername(), userDB.getEmail());
     }
@@ -80,7 +80,7 @@ public class UserService {
 
         // 1. Verify if exists user by ID.
         User existUser = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found."));
+                .orElseThrow(() -> new AppError("User with id " + id + " not found.", HttpStatus.NOT_FOUND));
 
         // 2. Update only non-null fields.
         if (updateUserDto.name() != null) {
@@ -117,7 +117,7 @@ public class UserService {
 
         // 1. Verify if exists user by ID.
         User existUser = userRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("User with id " + id + " not found."));
+                .orElseThrow(() -> new AppError("User with id " + id + " not found.", HttpStatus.NOT_FOUND));
 
         // 2. Put the property "isActive" in false.
         existUser.setIsActive(false);

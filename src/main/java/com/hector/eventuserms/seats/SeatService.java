@@ -13,8 +13,8 @@ import org.springframework.web.server.ResponseStatusException;
 
 import com.hector.eventuserms.events.EventRepository;
 import com.hector.eventuserms.events.models.Event;
+import com.hector.eventuserms.exception.AppError;
 import com.hector.eventuserms.exception.AppServiceException;
-import com.hector.eventuserms.exception.ResourceNotFoundException;
 import com.hector.eventuserms.seats.dtos.SeatSummaryDto;
 import com.hector.eventuserms.seats.dtos.request.CreateSeatRequestDto;
 import com.hector.eventuserms.seats.dtos.request.UpdateSeatRequestDto;
@@ -46,7 +46,7 @@ public class SeatService {
 
         // 1. Try to find the user in DB.
         Seat seatDB = seatRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Seat with id " + id + " not found."));
+                .orElseThrow(() -> new AppError("Seat with id " + id + " not found.", HttpStatus.NOT_FOUND));
 
         return SeatMapper.INSTANCE.toSeatDto(seatDB);
     }
@@ -56,7 +56,7 @@ public class SeatService {
 
         // 1. Search in DB the eventId
         Event eventDB = eventRepository.findById(createSeatDto.eventId()).orElseThrow(
-                () -> new ResourceNotFoundException("Event with id " + createSeatDto.eventId() + " not found."));
+                () -> new AppError("Event with id " + createSeatDto.eventId() + " not found.", HttpStatus.NOT_FOUND));
 
         // 2. Verify that no more seats are created than the event allows.
         if (eventDB.getSeats().size() >= (int) eventDB.getCapacity()) {
@@ -96,7 +96,7 @@ public class SeatService {
 
         // 2. Verify that exists an event with the id sent.
         Event event = eventRepository.findById(eventId)
-                .orElseThrow(() -> new ResourceNotFoundException("Event with " + eventId + " not found"));
+                .orElseThrow(() -> new AppError("Event with " + eventId + " not found", HttpStatus.NOT_FOUND));
 
         // 3. Verify that no more seats are created than the event allows.
         if (event.getSeats().size() >= event.getCapacity()) {
@@ -143,7 +143,7 @@ public class SeatService {
 
         // 1. Get the DB data.
         Seat seatDB = this.seatRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Seat with id " + id + " not found"));
+                .orElseThrow(() -> new AppError("Seat with id " + id + " not found", HttpStatus.NOT_FOUND));
 
         // 2. Update only non-null fields.
         if (updateSeatDto.tag() != null) {
@@ -172,7 +172,7 @@ public class SeatService {
 
             // 2.1.4 Check if the user exists in the database.
             User userDB = userRepository.findById(userId)
-                    .orElseThrow(() -> new ResourceNotFoundException("User with id " + userId + " not found."));
+                    .orElseThrow(() -> new AppError("User with id " + userId + " not found.", HttpStatus.NOT_FOUND));
 
             // 2.1.5 Verify that the user has not already reserved a seat for this event
             boolean existsReserveSeat = seatRepository.existsByEventIdAndUserId(seatDB.getEvent().getId(), userId);
