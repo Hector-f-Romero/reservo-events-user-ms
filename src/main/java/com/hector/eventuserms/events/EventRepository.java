@@ -17,8 +17,8 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
                         SELECT e.id, e.name, e.description, e.date, e.capacity,
                         CAST(COUNT(s.id) AS smallint) AS occupiedSeats, u.name as organizedBy
                         FROM events e
-                        LEFT JOIN seats s ON s.eventId = e.id AND s.state = 'OCCUPIED'
-                        LEFT JOIN users u on e.organizedBy = u.id
+                        LEFT JOIN seats s ON s."eventId" = e.id AND s.state = 'OCCUPIED'
+                        LEFT JOIN users u on e."organizedBy" = u.id
                         WHERE e.date > :currentDate
                         GROUP BY e.id, e.name, e.description, e.date, e.capacity, u.name
                         ORDER BY e.date ASC;

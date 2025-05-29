@@ -16,7 +16,7 @@ public interface SeatRepository extends JpaRepository<Seat, UUID> {
                       ELSE FALSE
                   END
                   FROM seats as s
-            WHERE s.id = :seatId AND s.userid IS NULL;
+            WHERE s.id = :seatId AND s."userId" IS NULL;
                   """, nativeQuery = true)
     boolean isAvailableToReserve(@Param("seatId") UUID seatId);
 
@@ -26,8 +26,8 @@ public interface SeatRepository extends JpaRepository<Seat, UUID> {
                 ELSE FALSE
             END
             FROM seats AS s
-            WHERE s.eventId = :eventId
-            AND s.userId = :userId
+            WHERE s."eventId" = :eventId
+            AND s."userId" = :userId
             """, nativeQuery = true)
     boolean existsByEventIdAndUserId(@Param("eventId") UUID eventId, @Param("userId") UUID userId);
 }
