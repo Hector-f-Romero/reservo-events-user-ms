@@ -4,8 +4,8 @@ import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
 import com.fasterxml.jackson.core.JsonProcessingException;
+import com.hector.eventuserms.common.nats.NatsMessage;
 import com.hector.eventuserms.common.nats.NatsMessageProcessor;
-import com.hector.eventuserms.events.nats.NatsMessageEvent;
 import com.hector.eventuserms.exception.ApiError;
 import com.hector.eventuserms.exception.AppError;
 import com.hector.eventuserms.exception.AppServiceException;
@@ -52,7 +52,7 @@ public class NatsExcepionsAspect {
 
         // 1. Get the arguments for the function intercepted.
         Object[] args = joinPoint.getArgs();
-        NatsMessageEvent messageEvent = null;
+        NatsMessage messageEvent = null;
 
         /*
          * 2. If we find an argument of type NatsMessageEvent, we assign it to
@@ -63,15 +63,15 @@ public class NatsExcepionsAspect {
          * back to the appropriate client.
          */
         for (Object arg : args) {
-            if (arg instanceof NatsMessageEvent natsMessageEvent) {
-                messageEvent = natsMessageEvent;
+            if (arg instanceof NatsMessage natsMessage) {
+                messageEvent = natsMessage;
                 break;
             }
         }
 
         // 3. If the event is not present or invalid, throw a critical internal
         // exception.
-        if (messageEvent == null || messageEvent.msg() == null) {
+        if (messageEvent == null || messageEvent.msg == null) {
             throw new AppError(
                     "You can't use the @NatsHandler annotation on methods that not receive a NatsMessageEvent.",
                     HttpStatus.INTERNAL_SERVER_ERROR);
@@ -85,7 +85,8 @@ public class NatsExcepionsAspect {
 
         } catch (Exception e) {
             // 5. If an exception occurs, handle and respond through NATS.
-            this.handleExceptions(messageEvent.msg(), e, messageEvent.subject(), joinPoint.getSignature().getName());
+            this.handleExceptions(messageEvent.msg, e, messageEvent.subject,
+                    joinPoint.getSignature().getName());
             return null;
         }
 

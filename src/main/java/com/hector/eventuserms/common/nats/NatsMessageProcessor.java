@@ -56,7 +56,7 @@ public class NatsMessageProcessor {
         JsonNode rootNode = this.objectMapper.readTree(requestJSON);
 
         // 4. Get the "data" field from the root node.
-        JsonNode dataNode = rootNode.get("data1");
+        JsonNode dataNode = rootNode.get("data");
 
         if (dataNode == null) {
             throw new JsonParseException("Missing required 'data' field in message");
@@ -64,26 +64,6 @@ public class NatsMessageProcessor {
 
         // 5. Return the "data" field.
         return dataNode;
-
-    }
-
-    /**
-     * Converts a checked exception into an unchecked one during JSON serialization.
-     * <p>
-     * This method allows converting an object to its JSON representation using
-     * Jackson.
-     * By allowing the original {@link JsonProcessingException} to propagate,
-     * developers
-     * can choose to catch it or let it be handled by an AOP aspect without having
-     * to wrap
-     * every call in a try/catch block.
-     *
-     * @param object the object to serialize
-     * @return the JSON string representation of the object
-     * @throws JsonProcessingException if the serialization fails
-     */
-    public String objectToJson(Object object) throws JsonProcessingException {
-        return this.objectMapper.writeValueAsString(object);
 
     }
 
@@ -119,10 +99,14 @@ public class NatsMessageProcessor {
      */
     public void sendResponse(Message msg, Object response) {
         try {
-            // 1. Serialize the response object into a JSON byte array.
-            byte[] responseData = this.objectMapper.writeValueAsBytes(response);
 
-            // 2. Publish the response to the replyTo subject provided in the original
+            // 1. Convert any objet into string.
+            String rawData = this.objectMapper.writeValueAsString(response);
+
+            // 2. Serialize the response object into a JSON byte array.
+            byte[] responseData = this.objectMapper.writeValueAsBytes(rawData);
+
+            // 3. Publish the response to the replyTo subject provided in the original
             // message.
             natsConnection.publish(msg.getReplyTo(), responseData);
         } catch (Exception e) {
@@ -146,7 +130,7 @@ public class NatsMessageProcessor {
                     .put("code", error.status().value())
                     .put("path", error.path());
 
-            String jsonError = errorPayload.toPrettyString();
+            String jsonError = this.objectMapper.writeValueAsString(errorPayload);
 
             // 2. Send the error as UTF-8 bytes to the replyTo subject
             natsConnection.publish(message.getReplyTo(), jsonError.getBytes(StandardCharsets.UTF_8));

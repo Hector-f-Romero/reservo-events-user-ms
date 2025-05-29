@@ -27,9 +27,9 @@ public class EventNatsController {
     }
 
     @NatsHandler
-    @EventListener(condition = "#e.subject() == T(com.hector.eventuserms.events.nats.EventSubjects).GET_ID")
+    @EventListener(condition = "#e.subject == T(com.hector.eventuserms.events.nats.EventSubjects).GET_ID")
     public void handleGetEvent(NatsMessageEvent e) throws JsonMappingException, JsonProcessingException {
-        UUID id = UUID.fromString(natsMessageProcessor.extractDataFromJson(e.msg()).asText());
+        UUID id = UUID.fromString(natsMessageProcessor.extractDataFromJson(e.msg).asText());
 
         System.out.println("BUSCANDING EVENTO");
         log.info("MAMA GUEVO");
@@ -37,7 +37,7 @@ public class EventNatsController {
         FindOneEventResponseDto event = eventService.findOne(id);
 
         // 3. Send the data to NATS
-        this.natsMessageProcessor.sendResponse(e.msg(), this.natsMessageProcessor.objectToJson(event));
+        this.natsMessageProcessor.sendResponse(e.msg, event);
 
     }
 }
