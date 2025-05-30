@@ -100,14 +100,23 @@ public class NatsMessageProcessor {
     public void sendResponse(Message msg, Object response) {
         try {
 
-            // 1. Convert any objet into string.
-            String rawData = this.objectMapper.writeValueAsString(response);
+            // 1. Convert the objet in JsonNde to attach it inside JSON response.
+            JsonNode payload = this.objectMapper.valueToTree(response);
 
-            // 2. Serialize the response object into a JSON byte array.
-            byte[] responseData = this.objectMapper.writeValueAsBytes(rawData);
+            // 2. Manually build a JSON response to NATS.
+            // We use .set() to insert a JSON Node while .put() is used to insert a string
+            // in 'value' JSON field.
+            ObjectNode natsResponseMessage = this.objectMapper.createObjectNode()
+                    .put("status", HttpStatus.OK.name())
+                    .put("code", HttpStatus.OK.value())
+                    .set("message", payload);
 
-            // 3. Publish the response to the replyTo subject provided in the original
+            // 3. Serialize the response object into a JSON byte array.
+            byte[] responseData = this.objectMapper.writeValueAsBytes(natsResponseMessage);
+
+            // 4. Publish the response to the replyTo subject provided in the original
             // message.
+            System.out.println(responseData);
             natsConnection.publish(msg.getReplyTo(), responseData);
         } catch (Exception e) {
             throw new AppError(e);
