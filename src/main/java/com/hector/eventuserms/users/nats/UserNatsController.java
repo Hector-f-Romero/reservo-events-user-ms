@@ -13,15 +13,12 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import com.hector.eventuserms.common.annotations.NatsHandler;
 import com.hector.eventuserms.common.nats.NatsMessageProcessor;
 
-import com.hector.eventuserms.events.nats.NatsMessageEvent;
 import com.hector.eventuserms.users.UserService;
 import com.hector.eventuserms.users.dtos.UserDto;
 import com.hector.eventuserms.users.dtos.requests.CreateUserRequestDto;
 import com.hector.eventuserms.users.dtos.requests.LoginUserRequestDto;
 import com.hector.eventuserms.users.dtos.requests.UpdateUserNatsRequestDto;
 import com.hector.eventuserms.users.dtos.requests.UpdateUserRequestDto;
-
-import io.nats.client.Message;
 
 @Component
 public class UserNatsController {
@@ -127,7 +124,7 @@ public class UserNatsController {
         UserDto loggedUser = userService.login(loginUserRequestDto);
 
         // 3. Send the data to NATS.
-        this.natsMessageProcessor.sendResponse(e.msg, this.objectMapper.writeValueAsString(loggedUser));
+        this.natsMessageProcessor.sendResponse(e.msg, loggedUser);
 
     }
 

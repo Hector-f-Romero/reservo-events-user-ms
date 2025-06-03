@@ -20,8 +20,10 @@ import com.hector.eventuserms.users.models.User;
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
 import jakarta.transaction.Transactional;
+import lombok.extern.slf4j.Slf4j;
 
 @Service
+@Slf4j
 public class UserService {
 
     private final UserRepository userRepository;
@@ -129,12 +131,13 @@ public class UserService {
 
     public UserDto login(LoginUserRequestDto loginUserRequestDto) {
         User userDB = userRepository.findByUsername(loginUserRequestDto.username())
-                .orElseThrow(() -> new AppServiceException(HttpStatus.NOT_FOUND, "Username not registered yet"));
+                .orElseThrow(() -> new AppError("Username not registered yet", HttpStatus.NOT_FOUND));
 
+        log.debug("Existe el user");
         boolean matchPassword = passwordEncoder.matches(loginUserRequestDto.password(), userDB.getPassword());
 
         if (!matchPassword) {
-            throw new RequestRejectedException("Contraseña invalida");
+            throw new AppError("Invalid password.", HttpStatus.BAD_REQUEST);
         }
 
         // 3. Return the mapped data.
