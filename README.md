@@ -28,15 +28,18 @@ To function properly, this project is split into five repositories:
 
 ## 🧠 About the project
 
-This web service provides CRUD operations for the User, Event, and Seat entities, enabling event creation, listing of upcoming events, seat reservation for specific events, and other related functions. It connects to a PostgreSQL 16 database.
+This web server provides CRUD operations for the User, Event, and Seat entities, enabling event creation, listing of upcoming events, seat reservation for specific events, and other related functions. It connects to a PostgreSQL 16 database.
 
-To learn more about Spring Boot, this project initially implemented REST controllers as a first introduction to the framework, documented with Swagger. Later, controllers were added to listen for and emit domain events via NATS.
+To learn more about Spring Boot, this project initially implemented REST controllers as a first introduction to the framework, documented with Swagger. Later, controllers were added to listen for and emit domain events via NATS and by means of Aspect Oriented Programming (AOP), I was able to centralize error handling during NATS communication and learn to decouple this bussiness logic.
 
+Due to my previous experience with NestJs and research in several forums and videos, this project uses a Feature-Based File Structure, which made it easier for me to group the different layers associated to a single entity.
 
 ## Prerequisites
 
 - Java 21  
-- Docker & Docker Compose  
+- Docker
+- Configure and execute NestJs gateway
+- Execute the endpoint `POST` `/seed` to generate an initial data.
 
 
 ## License
