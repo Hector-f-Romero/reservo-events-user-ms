@@ -163,8 +163,8 @@ public class SeatService {
 
             // 2.1.2 If the seat already has assigned a userId, return an error for client.
             if (!isSeatAvailable) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT,
-                        "The seat " + seatDB.getTag() + " already has reserved.");
+                throw new AppError(
+                        "The seat " + seatDB.getTag() + " already has reserved.", HttpStatus.CONFLICT);
             }
 
             // 2.1.3 Extract the user ID from the request DTO.
@@ -179,8 +179,8 @@ public class SeatService {
 
             // 2.1.6 If the user has already reserved a seat, throw a conflict error.
             if (existsReserveSeat) {
-                throw new ResponseStatusException(HttpStatus.CONFLICT,
-                        "The user " + userId + " already has reserved a seat for this event.");
+                throw new AppError(
+                        "The user " + userId + " already has reserved a seat for this event.", HttpStatus.CONFLICT);
             }
 
             // 2.1.7 Associate the user with the seat in the db.
