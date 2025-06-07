@@ -9,7 +9,6 @@ import java.util.stream.Collectors;
 
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Service;
-import org.springframework.web.server.ResponseStatusException;
 
 import com.hector.eventuserms.events.EventRepository;
 import com.hector.eventuserms.events.models.Event;
