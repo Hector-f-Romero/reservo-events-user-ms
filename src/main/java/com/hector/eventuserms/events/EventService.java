@@ -17,7 +17,6 @@ import com.hector.eventuserms.events.dtos.response.FindEventsResponseDto;
 import com.hector.eventuserms.events.dtos.response.FindOneEventResponseDto;
 import com.hector.eventuserms.events.models.Event;
 import com.hector.eventuserms.exception.AppError;
-import com.hector.eventuserms.exception.AppServiceException;
 import com.hector.eventuserms.seats.SeatRepository;
 import com.hector.eventuserms.seats.enums.SeatState;
 import com.hector.eventuserms.seats.models.Seat;
@@ -78,7 +77,7 @@ public class EventService {
     public FindOneEventResponseDto findOne(UUID id) {
         // 1. Try to find and event in DB
         Event eventDB = eventRepository.findById(id)
-                .orElseThrow(() -> new AppServiceException(HttpStatus.NOT_FOUND, "Event not found."));
+                .orElseThrow(() -> new AppError("Event not found.", HttpStatus.NOT_FOUND));
 
         // return EventMapper.INSTANCE.toCreateEventResponseDto(eventDB);
         return EventMapper.INSTANCE.toFindOneEventDto(eventDB);
@@ -96,8 +95,8 @@ public class EventService {
         var upcomingEvents = this.findUpcomingEventsByDate(createEventDto.date());
 
         if (upcomingEvents.contains(createEventDto.date())) {
-            throw new AppServiceException(HttpStatus.BAD_REQUEST,
-                    "There is an event registered for the date " + createEventDto.date());
+            throw new AppError(
+                    "There is an event registered for the date " + createEventDto.date(), HttpStatus.BAD_REQUEST);
         }
 
         // 3. Map the dto to JPA class

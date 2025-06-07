@@ -13,7 +13,6 @@ import org.springframework.stereotype.Service;
 import com.hector.eventuserms.events.EventRepository;
 import com.hector.eventuserms.events.models.Event;
 import com.hector.eventuserms.exception.AppError;
-import com.hector.eventuserms.exception.AppServiceException;
 import com.hector.eventuserms.seats.dtos.SeatSummaryDto;
 import com.hector.eventuserms.seats.dtos.request.CreateSeatRequestDto;
 import com.hector.eventuserms.seats.dtos.request.UpdateSeatRequestDto;
@@ -59,8 +58,8 @@ public class SeatService {
 
         // 2. Verify that no more seats are created than the event allows.
         if (eventDB.getSeats().size() >= (int) eventDB.getCapacity()) {
-            throw new AppServiceException(HttpStatus.CONFLICT,
-                    "The event has reached its maximum capacity. Can't create more seats.");
+            throw new AppError(
+                    "The event has reached its maximum capacity. Can't create more seats.", HttpStatus.CONFLICT);
         }
 
         // 3 Ensure not seat exists with the same tag as the one provided in the
@@ -68,8 +67,8 @@ public class SeatService {
         boolean tagExists = eventDB.getSeats().stream().anyMatch(seat -> seat.getTag().equals(createSeatDto.tag()));
 
         if (tagExists) {
-            throw new AppServiceException(HttpStatus.CONFLICT,
-                    "A seat with the tag " + createSeatDto.tag() + " already exists.");
+            throw new AppError(
+                    "A seat with the tag " + createSeatDto.tag() + " already exists.", HttpStatus.CONFLICT);
         }
 
         // 4. Save in BD.
@@ -89,8 +88,8 @@ public class SeatService {
         boolean hasDuplicates = seats.size() != new HashSet<>(seats).size();
 
         if (hasDuplicates) {
-            throw new AppServiceException(HttpStatus.BAD_REQUEST,
-                    "Duplicate seat tags are not allowed. Please review your request.");
+            throw new AppError(
+                    "Duplicate seat tags are not allowed. Please review your request.", HttpStatus.BAD_REQUEST);
         }
 
         // 2. Verify that exists an event with the id sent.
@@ -99,15 +98,16 @@ public class SeatService {
 
         // 3. Verify that no more seats are created than the event allows.
         if (event.getSeats().size() >= event.getCapacity()) {
-            throw new AppServiceException(HttpStatus.CONFLICT,
-                    "The event has reached its maximum capacity. Can't create more seats.");
+            throw new AppError(
+                    "The event has reached its maximum capacity. Can't create more seats.", HttpStatus.CONFLICT);
         }
 
         // 4. Ensure that number of seats to be inserted doesn't exceed the event's
         // capacity.
         if (event.getSeats().size() + seats.size() > event.getCapacity()) {
-            throw new AppServiceException(HttpStatus.CONFLICT,
-                    "The number of seats you are trying to insert  exceeds the maxium capacity of the event.");
+            throw new AppError(
+                    "The number of seats you are trying to insert  exceeds the maxium capacity of the event.",
+                    HttpStatus.CONFLICT);
         }
 
         // 5. Get the existing tags from the event inside a Set. This is helpful to
@@ -120,8 +120,8 @@ public class SeatService {
 
         // 7. If a duplicate taghas been found, throw an error.
         if (duplicateTag.isPresent()) {
-            throw new AppServiceException(HttpStatus.CONFLICT,
-                    "A seat with the tag " + duplicateTag.get() + " already exists.");
+            throw new AppError(
+                    "A seat with the tag " + duplicateTag.get() + " already exists.", HttpStatus.CONFLICT);
         }
 
         // 8. Create the SeatDB object with the list sent

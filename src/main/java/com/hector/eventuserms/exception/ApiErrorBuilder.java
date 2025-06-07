@@ -72,8 +72,6 @@ public class ApiErrorBuilder {
                         timestamp);
             case AppError ex -> new ApiError(errorPath, ex.getMessage(), ex.getStatus(),
                     timestamp);
-            case AppServiceException ex -> new ApiError(errorPath, ex.getMessage(),
-                    ex.getHttpStatus(), timestamp);
             default -> new ApiError(
                     errorPath,
                     exception.getMessage(),

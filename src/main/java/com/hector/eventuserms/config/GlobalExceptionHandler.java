@@ -12,20 +12,11 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 
 import com.hector.eventuserms.exception.ApiError;
 import com.hector.eventuserms.exception.ApiErrorBuilder;
-import com.hector.eventuserms.exception.AppServiceException;
 
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestControllerAdvice
 public class GlobalExceptionHandler {
-
-        @ExceptionHandler(AppServiceException.class)
-        public ResponseEntity<ApiError> hanldeServiceException(AppServiceException ex, HttpServletRequest request) {
-
-                ApiError apiError = ApiErrorBuilder.buildApiError(ex, request.getRequestURI());
-
-                return new ResponseEntity<>(apiError, ex.getHttpStatus());
-        }
 
         @ExceptionHandler(MethodArgumentNotValidException.class)
         public ResponseEntity<ApiError> handleValidationExceptions(MethodArgumentNotValidException ex,
