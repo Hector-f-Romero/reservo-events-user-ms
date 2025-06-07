@@ -95,38 +95,43 @@ public class NatsExcepionsAspect {
     private void handleExceptions(Message msg, Exception ex, String subject,
             String methodName) {
 
-        ApiError apiError;
         log.info("An error was intercepted and is being processed by the NATS exception handler.");
+
+        log.info(ex.getClass().getName());
+
+        // 1. Create a standard object to show error information.
+        ApiError apiError = this.buildApiError(ex, subject);
+
+        // 2. Send the formatted error response back to the NATS client.
+        this.natsMessageProcessor.sendError(msg, apiError);
+    }
+
+    private ApiError buildApiError(Exception exception, String subject) {
+        String errorPath = "NATS CONTROLLER - " + subject;
+        String timestamp = Instant.now().toString();
 
         /*
          * 1. Identify the type of exception and build the corresponding ApiError
          * object, including status code, error message, timestamp, and context.
          */
-        if (ex instanceof AppServiceException) {
-            AppServiceException appEx = (AppServiceException) ex;
-            apiError = new ApiError("NATS CONTROLLER - " + subject, appEx.getMessage(),
-                    appEx.getHttpStatus(), Instant.now().toString());
-
-        } else if (ex instanceof JsonProcessingException) {
-            apiError = new ApiError("NATS CONTROLLER - " + subject,
-                    "Error processing JSON: " + ex.getMessage(),
+        return switch (exception) {
+            case JsonProcessingException jsonEx -> new ApiError(
+                    errorPath,
+                    "Error processing JSON: " + jsonEx.getMessage(),
                     HttpStatus.INTERNAL_SERVER_ERROR,
-                    Instant.now().toString());
-        } else if (ex instanceof AppError) {
-            AppError appEx = (AppError) ex;
-
-            apiError = new ApiError("NATS CONTROLLER - " + subject, appEx.getMessage(), appEx.getStatus(),
-                    Instant.now().toString());
-        }
-
-        else {
-            apiError = new ApiError("NATS CONTROLLER - " + subject, ex.getMessage(),
+                    timestamp);
+            case IllegalArgumentException ex ->
+                new ApiError(errorPath, ex.getMessage(), HttpStatus.BAD_REQUEST, timestamp);
+            case AppError ex -> new ApiError(errorPath, ex.getMessage(), ex.getStatus(),
+                    timestamp);
+            case AppServiceException ex -> new ApiError(errorPath, ex.getMessage(),
+                    ex.getHttpStatus(), timestamp);
+            default -> new ApiError(
+                    errorPath,
+                    exception.getMessage(),
                     HttpStatus.INTERNAL_SERVER_ERROR,
-                    Instant.now().toString());
-        }
-
-        // 2. Send the formatted error response back to the NATS client.
-        this.natsMessageProcessor.sendError(msg, apiError);
+                    timestamp);
+        };
     }
 
 }
