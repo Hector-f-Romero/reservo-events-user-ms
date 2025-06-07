@@ -3,17 +3,14 @@ package com.hector.eventuserms.common.aspects;
 import org.springframework.http.HttpStatus;
 import org.springframework.stereotype.Component;
 
-import com.fasterxml.jackson.core.JsonProcessingException;
 import com.hector.eventuserms.common.nats.NatsMessage;
 import com.hector.eventuserms.common.nats.NatsMessageProcessor;
 import com.hector.eventuserms.exception.ApiError;
+import com.hector.eventuserms.exception.ApiErrorBuilder;
 import com.hector.eventuserms.exception.AppError;
-import com.hector.eventuserms.exception.AppServiceException;
 
 import io.nats.client.Message;
 import lombok.extern.slf4j.Slf4j;
-
-import java.time.Instant;
 
 import org.aspectj.lang.ProceedingJoinPoint;
 import org.aspectj.lang.annotation.Around;
@@ -77,7 +74,6 @@ public class NatsExcepionsAspect {
                     HttpStatus.INTERNAL_SERVER_ERROR);
 
         }
-
         try {
 
             // 4. Proceed with the original method execution.
@@ -100,38 +96,10 @@ public class NatsExcepionsAspect {
         log.info(ex.getClass().getName());
 
         // 1. Create a standard object to show error information.
-        ApiError apiError = this.buildApiError(ex, subject);
+        ApiError apiError = ApiErrorBuilder.buildApiError(ex, "NATS CONTROLLER - Error in subject: " + subject);
 
         // 2. Send the formatted error response back to the NATS client.
         this.natsMessageProcessor.sendError(msg, apiError);
-    }
-
-    private ApiError buildApiError(Exception exception, String subject) {
-        String errorPath = "NATS CONTROLLER - " + subject;
-        String timestamp = Instant.now().toString();
-
-        /*
-         * 1. Identify the type of exception and build the corresponding ApiError
-         * object, including status code, error message, timestamp, and context.
-         */
-        return switch (exception) {
-            case JsonProcessingException jsonEx -> new ApiError(
-                    errorPath,
-                    "Error processing JSON: " + jsonEx.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR,
-                    timestamp);
-            case IllegalArgumentException ex ->
-                new ApiError(errorPath, ex.getMessage(), HttpStatus.BAD_REQUEST, timestamp);
-            case AppError ex -> new ApiError(errorPath, ex.getMessage(), ex.getStatus(),
-                    timestamp);
-            case AppServiceException ex -> new ApiError(errorPath, ex.getMessage(),
-                    ex.getHttpStatus(), timestamp);
-            default -> new ApiError(
-                    errorPath,
-                    exception.getMessage(),
-                    HttpStatus.INTERNAL_SERVER_ERROR,
-                    timestamp);
-        };
     }
 
 }

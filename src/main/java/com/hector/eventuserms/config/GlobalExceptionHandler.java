@@ -1,21 +1,17 @@
 package com.hector.eventuserms.config;
 
-import java.time.Instant;
-import java.util.ArrayList;
-import java.util.List;
-
 import org.hibernate.TypeMismatchException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.validation.FieldError;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
 import org.springframework.web.method.annotation.MethodArgumentTypeMismatchException;
 
 import com.hector.eventuserms.exception.ApiError;
+import com.hector.eventuserms.exception.ApiErrorBuilder;
 import com.hector.eventuserms.exception.AppServiceException;
 
 import jakarta.servlet.http.HttpServletRequest;
@@ -26,8 +22,7 @@ public class GlobalExceptionHandler {
         @ExceptionHandler(AppServiceException.class)
         public ResponseEntity<ApiError> hanldeServiceException(AppServiceException ex, HttpServletRequest request) {
 
-                ApiError apiError = new ApiError(request.getRequestURI(), ex.getMessage(), ex.getHttpStatus(),
-                                Instant.now().toString());
+                ApiError apiError = ApiErrorBuilder.buildApiError(ex, request.getRequestURI());
 
                 return new ResponseEntity<>(apiError, ex.getHttpStatus());
         }
@@ -36,22 +31,7 @@ public class GlobalExceptionHandler {
         public ResponseEntity<ApiError> handleValidationExceptions(MethodArgumentNotValidException ex,
                         HttpServletRequest request) {
 
-                // Crear un mensaje que contenga todos los errores de validación
-                StringBuilder errorMessage = new StringBuilder("Validation failed: ");
-
-                List<String> validationErrors = new ArrayList<>();
-
-                for (FieldError error : ex.getBindingResult().getFieldErrors()) {
-                        validationErrors.add(error.getField() + ": " + error.getDefaultMessage());
-                }
-
-                errorMessage.append(String.join(", ", validationErrors));
-
-                ApiError apiError = new ApiError(
-                                request.getRequestURI(),
-                                errorMessage.toString(),
-                                HttpStatus.BAD_REQUEST,
-                                Instant.now().toString());
+                ApiError apiError = ApiErrorBuilder.buildApiError(ex, request.getRequestURI());
 
                 return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
         }
@@ -59,8 +39,8 @@ public class GlobalExceptionHandler {
         @ExceptionHandler(DataIntegrityViolationException.class)
         public ResponseEntity<ApiError> handleDataIntegrityViolationException(DataIntegrityViolationException ex,
                         HttpServletRequest request) {
-                ApiError apiError = new ApiError(request.getRequestURI(), ex.getMessage(), HttpStatus.CONFLICT,
-                                Instant.now().toString());
+
+                ApiError apiError = ApiErrorBuilder.buildApiError(ex, request.getRequestURI());
 
                 return new ResponseEntity<>(apiError, HttpStatus.CONFLICT);
 
@@ -73,21 +53,7 @@ public class GlobalExceptionHandler {
         public ResponseEntity<ApiError> handleTypeMismatchException(MethodArgumentTypeMismatchException ex,
                         HttpServletRequest request) {
 
-                // Obtener el nombre del parámetro que causó el error
-                String paramName = ex.getName();
-
-                // Obtener el tipo requerido, manejando el caso en que sea null
-                Class<?> requiredType = ex.getRequiredType();
-                String typeName = requiredType != null ? requiredType.getSimpleName() : "a valid type";
-
-                // Construir el mensaje de error
-                String errorMessage = String.format("Parameter '%s' must be %s.", paramName, typeName);
-
-                ApiError apiError = new ApiError(
-                                request.getRequestURI(),
-                                errorMessage,
-                                HttpStatus.BAD_REQUEST,
-                                Instant.now().toString());
+                ApiError apiError = ApiErrorBuilder.buildApiError(ex, request.getRequestURI());
 
                 return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
         }
@@ -97,13 +63,8 @@ public class GlobalExceptionHandler {
         @ExceptionHandler(HttpMessageNotReadableException.class)
         public ResponseEntity<ApiError> handleHttpMessageNotReadable(HttpMessageNotReadableException ex,
                         HttpServletRequest request) {
-                String errorMessage = "Error procesing input JSON: " + ex.getMessage();
 
-                ApiError apiError = new ApiError(
-                                request.getRequestURI(),
-                                errorMessage,
-                                HttpStatus.BAD_REQUEST,
-                                Instant.now().toString());
+                ApiError apiError = ApiErrorBuilder.buildApiError(ex, request.getRequestURI());
 
                 return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
         }
@@ -113,13 +74,8 @@ public class GlobalExceptionHandler {
         @ExceptionHandler(TypeMismatchException.class)
         public ResponseEntity<ApiError> handleTypeMismatchException(TypeNotPresentException ex,
                         HttpServletRequest request) {
-                String errorMessage = "Type error: " + ex.getMessage();
 
-                ApiError apiError = new ApiError(
-                                request.getRequestURI(),
-                                errorMessage,
-                                HttpStatus.BAD_REQUEST,
-                                Instant.now().toString());
+                ApiError apiError = ApiErrorBuilder.buildApiError(ex, request.getRequestURI());
 
                 return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
 
@@ -129,11 +85,7 @@ public class GlobalExceptionHandler {
         // resort for unexpected errors.
         @ExceptionHandler(Exception.class)
         public ResponseEntity<ApiError> handleGenericException(Exception ex, HttpServletRequest request) {
-                ApiError apiError = new ApiError(
-                                request.getRequestURI(),
-                                "Server error: " + ex.getMessage(),
-                                HttpStatus.INTERNAL_SERVER_ERROR,
-                                Instant.now().toString());
+                ApiError apiError = ApiErrorBuilder.buildApiError(ex, request.getRequestURI());
 
                 return new ResponseEntity<>(apiError, HttpStatus.INTERNAL_SERVER_ERROR);
         }

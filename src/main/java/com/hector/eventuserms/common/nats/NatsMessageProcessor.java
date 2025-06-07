@@ -134,10 +134,11 @@ public class NatsMessageProcessor {
 
             // 1. Manually build a JSON error string.
             ObjectNode errorPayload = this.objectMapper.createObjectNode()
-                    .put("status", error.status().name())
+                    .put("path", error.path())
                     .put("message", error.message())
-                    .put("code", error.status().value())
-                    .put("path", error.path());
+                    .put("status", error.status().name())
+                    .put("timestamp", error.timestamp())
+                    .put("code", error.status().value());
 
             String jsonError = this.objectMapper.writeValueAsString(errorPayload);
 
