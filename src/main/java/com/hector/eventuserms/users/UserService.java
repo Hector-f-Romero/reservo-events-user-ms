@@ -7,6 +7,7 @@ import org.hibernate.Session;
 import org.springframework.http.HttpStatus;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
 
 import com.hector.eventuserms.exception.AppError;
 import com.hector.eventuserms.users.dtos.UserDto;
@@ -17,7 +18,6 @@ import com.hector.eventuserms.users.models.User;
 
 import jakarta.persistence.EntityManager;
 import jakarta.persistence.PersistenceContext;
-import jakarta.transaction.Transactional;
 import lombok.extern.slf4j.Slf4j;
 
 @Service
@@ -36,6 +36,7 @@ public class UserService {
         this.entityManager = entityManager;
     }
 
+    @Transactional(readOnly = true)
     public List<UserDto> find() {
 
         // 1. Activate the filter to avoid return data with isActive property in false
