@@ -11,5 +11,5 @@ public final class UserSubjects {
     public static final String CREATE = "users.create";
     public static final String UPDATE = "users.update";
     public static final String DELETE = "users.delete";
-    public static final String LOGIN = "auth.login";
+    public static final String LOGIN = "users.auth.login";
 }
