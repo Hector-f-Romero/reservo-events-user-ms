@@ -74,6 +74,7 @@ public class EventService {
         return eventRepository.findUpcomingEventsByDate(userDate);
     }
 
+    @Transactional
     public FindOneEventResponseDto findOne(UUID id) {
         // 1. Try to find and event in DB
         Event eventDB = eventRepository.findById(id)
