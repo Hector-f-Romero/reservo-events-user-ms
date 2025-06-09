@@ -23,7 +23,7 @@ import com.hector.eventuserms.seats.models.Seat;
 import com.hector.eventuserms.users.UserRepository;
 import com.hector.eventuserms.users.models.User;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class SeatService {

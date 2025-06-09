@@ -23,7 +23,7 @@ import com.hector.eventuserms.seats.models.Seat;
 import com.hector.eventuserms.users.UserRepository;
 import com.hector.eventuserms.users.models.User;
 
-import jakarta.transaction.Transactional;
+import org.springframework.transaction.annotation.Transactional;
 
 @Service
 public class EventService {
@@ -38,7 +38,7 @@ public class EventService {
         this.seatRepository = seatRepository;
     }
 
-    @Transactional
+    @Transactional(readOnly = true)
     public List<FindEventsResponseDto> find() {
         return eventRepository.findAll().stream()
                 .map(event -> {
@@ -47,6 +47,7 @@ public class EventService {
                 }).collect(Collectors.toList());
     }
 
+    @Transactional(readOnly = true)
     public List<FindUpcomingEventResponseDto> findUpcoming() {
         var results = eventRepository.findUpcomingEventsWithAvailableSeats(ZonedDateTime.now());
 
@@ -73,7 +74,6 @@ public class EventService {
         return eventRepository.findUpcomingEventsByDate(userDate);
     }
 
-    @Transactional
     public FindOneEventResponseDto findOne(UUID id) {
         // 1. Try to find and event in DB
         Event eventDB = eventRepository.findById(id)

@@ -57,6 +57,7 @@ public class UserService {
         return new UserDto(id, userDB.getName(), userDB.getUsername(), userDB.getEmail());
     }
 
+    @Transactional
     public UserDto create(CreateUserRequestDto createUserDto) {
 
         // 1. Hash the password
@@ -72,8 +73,6 @@ public class UserService {
 
         // 3. Return the mapped data.
         return UserMapper.INSTANCE.toUserDto(userDB);
-        // return new UserDto(userDB.getId(), userDB.getName(), userDB.getUsername(),
-        // userDB.getEmail());
     }
 
     @Transactional
@@ -114,6 +113,7 @@ public class UserService {
                 updatedUser.getEmail());
     }
 
+    @Transactional
     public void delete(UUID id) {
 
         // 1. Verify if exists user by ID.
