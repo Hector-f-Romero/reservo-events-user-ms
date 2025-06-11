@@ -20,7 +20,7 @@ To function properly, this project is split into five repositories:
 - [API Gateway](https://github.com/Hector-f-Romero/reservo-api-gateway)
 - [Event & User MS](https://github.com/Hector-f-Romero/reservo-events-user-ms)
 - [Hybrid Web Socket Server](https://github.com/Hector-f-Romero/reservo-ws-ms)
-- Auth (Coming soon)
+- [Auth MS](https://github.com/Hector-f-Romero/reservo-auth-ms)
   
 > [!NOTE]
 > I am aware that the broad separation of responsibilities in this project is not the most optimal and introduces operational complexity, but it was done intentionally to simulate what it’s like to work on a large-scale project with this architecture.
