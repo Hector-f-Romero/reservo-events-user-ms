@@ -26,6 +26,18 @@ public interface EventRepository extends JpaRepository<Event, UUID> {
         List<Object[]> findUpcomingEventsWithAvailableSeats(
                         @Param("currentDate") ZonedDateTime currentDate);
 
+        /**
+         * Retrieves a list of event dates that occur within the same calendar day
+         * as the given requested date.
+         * 
+         * The query:
+         * - Selects events where the date is greater than or equal to the requested
+         * timestamp.
+         * - Filters out events that occur after midnight of the same day (exclusive).
+         * - Effectively returns all events on the same day as the given Instant,
+         * regardless of time.
+         * 
+         */
         @Query(value = """
                         SELECT e.date FROM events as e
                         WHERE e.date >= :requestedDate
