@@ -1,6 +1,10 @@
 package com.hector.eventuserms.config;
 
+import java.sql.SQLException;
+
 import org.hibernate.TypeMismatchException;
+import org.hibernate.exception.ConstraintViolationException;
+import org.springframework.dao.DataAccessException;
 import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -13,6 +17,7 @@ import org.springframework.web.method.annotation.MethodArgumentTypeMismatchExcep
 import com.hector.eventuserms.exception.ApiError;
 import com.hector.eventuserms.exception.ApiErrorBuilder;
 
+import jakarta.persistence.PersistenceException;
 import jakarta.servlet.http.HttpServletRequest;
 
 @RestControllerAdvice
@@ -70,6 +75,17 @@ public class GlobalExceptionHandler {
 
                 return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
 
+        }
+
+        @ExceptionHandler({
+                        ConstraintViolationException.class,
+                        DataAccessException.class,
+                        SQLException.class,
+                        PersistenceException.class })
+        public ResponseEntity<ApiError> handleDatabaseErrors(Exception ex, HttpServletRequest request) {
+                ApiError apiError = ApiErrorBuilder.buildApiError(ex, request.getRequestURI());
+
+                return new ResponseEntity<>(apiError, HttpStatus.BAD_REQUEST);
         }
 
         // Handles any exception not caught by other specific handlers. This is the last
